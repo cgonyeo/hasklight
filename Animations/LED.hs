@@ -1,11 +1,13 @@
 module Animations.LED where
 
+import qualified Data.Vector as V
+
 data LED = LED { red   :: Int
                , blue  :: Int
                , green :: Int
                } deriving(Show,Eq)
 
-type Display = [LED]
+type Display = V.Vector LED
 
 type DisplaySize = Int
 
@@ -13,30 +15,33 @@ type Color = LED
 
 type TimeDiff = Double
 
-type Animation = (TimeDiff -> Display)
-
-type AudioAnimation = ([Float] -> TimeDiff -> Display)
+data Animation = TimeOnly (TimeDiff -> Display)
+               | Audio    ([Float] -> Display)
+               | FFT      ([Float] -> Display)
 
 add :: Display -> Display -> Display
-add = zipWith (\(LED r b g) (LED r' b' g') -> LED (f r r') (f b b') (f g g'))
+add = V.zipWith (\(LED r b g) (LED r' b' g') -> LED (f r r') (f b b') (f g g'))
     where f a b = if a + b < 4096
                       then a + b
                       else 4095
 
 sub :: Display -> Display -> Display
-sub = zipWith (\(LED r b g) (LED r' b' g') -> LED (f r r') (f b b') (f g g'))
+sub = V.zipWith (\(LED r b g) (LED r' b' g') -> LED (f r r') (f b b') (f g g'))
     where f a b = if a - b >= 0
                       then a - b
                       else 0
 
 --Scales an Integer value by a given amount, and keeps it within a range of
 --valid LED values (a 12 bit positive integer).
-modColor :: Int -> Double -> Int
-modColor x y
+scaleInt :: Int -> Double -> Int
+scaleInt x y
     | x' < 0    = x
     | x' > 4095 = 4095
     | otherwise = x'
     where x' = (truncate $ (fromIntegral x) * y)
+
+modC :: Color -> Double -> LED
+modC (LED r g b) s = LED (scaleInt r s) (scaleInt g s) (scaleInt b s)
 
 --Piecewise cosine function. If between -0.5 and 0.5, curves from 0 at
 -- -0.5, to 1 at 0, and back to 0 at 0.5, and it 0 at all other places.
@@ -48,4 +53,4 @@ animCos x = if x >= (-0.5) && x <= 0.5
 --Takes a given time, and returns only the decimal component of the number.
 --For example, 342.5453 becomes 0.5453.
 decmComp :: TimeDiff -> Double
-decmComp t = (t - (fromIntegral $ floor t))
+decmComp t = (t - (fromIntegral (floor t :: Int)))

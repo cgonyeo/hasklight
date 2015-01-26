@@ -9,10 +9,10 @@ wave :: Double -- speed
      -> DisplaySize
      -> TimeDiff
      -> Display
-wave speed size freq (LED r g b) s t = colors
+wave speed size freq c s t = colors
         where center = decmComp $ speed * t
-              strengths = map (wavefunc s center) [0..(fromIntegral s)]
-              colors = map (\x -> (LED (modColor r x) (modColor g x) (modColor b x))) strengths
+              strengths = map (wavefunc s center) [0..(fromIntegral (s - 1))]
+              colors = map (modC c) strengths
 
 wavefunc :: DisplaySize -> Double -> Int -> Double
 wavefunc l c x = animCos distance

@@ -18,9 +18,9 @@ cabal-version:       >=1.8
 executable hasklight
   main-is:             Main.hs
   -- other-modules:       
-  build-depends:       base ==4.5.*, clock ==0.4.*,pulse-simple ==0.1.*
-  ghc-options:         -Wall -O2 -threaded
-  extra-libraries:     wiringPi asound
+  build-depends:       base ==4.6.*, clock ==0.4.*, vector ==0.10.*
+  ghc-options:         -Wall -O2
+  extra-libraries:     wiringPi asound fftw3 rt pthread
   extra-lib-dirs:      /usr/local/lib
   c-sources:           TLC5947/tlc5947.c Audio/audio.c
-  cc-options:          -std=c99 -ggdb
+  cc-options:          -std=gnu99 -ggdb

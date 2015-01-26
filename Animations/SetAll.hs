@@ -6,4 +6,4 @@ setAll :: Color
        -> DisplaySize
        -> TimeDiff
        -> Display
-setAll c s _ = map (\_ -> c) [0..s]
+setAll c s _ = map (\_ -> c) [1..s]

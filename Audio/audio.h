@@ -7,5 +7,6 @@ typedef float SAMPLE;
 
 void audioInitialization();
 SAMPLE *getSoundBuffer();
+SAMPLE *runFFT();
 
 #endif

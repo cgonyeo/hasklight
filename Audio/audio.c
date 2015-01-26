@@ -11,11 +11,17 @@
 #include <alsa/asoundlib.h>
 #include <math.h>
 #include <pthread.h>
+#include <fftw3.h>
+
+//FFTW things
+fftw_complex *in, *out;
+fftw_plan plan;
 
 pthread_mutex_t storageLock = PTHREAD_MUTEX_INITIALIZER;
 
 SAMPLE storage[BUFSIZE];
 SAMPLE readbuf[BUFSIZE];
+SAMPLE fftbuf[BUFSIZE];
 
 double PI = 3.141592653;
 
@@ -29,6 +35,20 @@ SAMPLE *getSoundBuffer() {
         readbuf[i] = storage[i] * hann_window(i, BUFSIZE);
     pthread_mutex_unlock(&storageLock);
     return readbuf;
+}
+
+SAMPLE *runFFT()
+{
+    pthread_mutex_lock(&storageLock);
+    for(int i = 0; i < BUFSIZE; i++)
+        in[i][0] = storage[i];
+    pthread_mutex_unlock(&storageLock);
+    fftw_execute(plan);
+    for(int i = 0; i < BUFSIZE; i++)
+    {
+        fftbuf[i] = sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]);
+    }
+    return fftbuf;
 }
 
 /**
@@ -57,6 +77,16 @@ void *processAudio(void *arg) {
 void audioInitialization() {
     for(int i = 0; i < BUFSIZE; i++)
         storage[i] = 0;
+
+    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * BUFSIZE);
+    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * BUFSIZE);
+    for(int i = 0; i < BUFSIZE; i++)
+    {
+        in[i][0] = 0;
+        in[i][1] = 0;
+    }
+
+    plan = fftw_plan_dft_1d(BUFSIZE, in, out, FFTW_FORWARD, FFTW_MEASURE);
 
     int err;
     char *device = "hw:1,0";
@@ -120,5 +150,6 @@ void audioInitialization() {
         exit (1); 
     } 
 
-    processAudio(capture_handle);
+    pthread_t al;
+    pthread_create(&al,NULL,processAudio,capture_handle);
 }
