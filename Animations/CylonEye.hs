@@ -9,6 +9,10 @@ cylonEye :: Double -- speed
          -> DisplaySize
          -> TimeDiff
          -> Display
-cylonEye speed size c s t  = V.generate s (\x -> modC c $ animCos $ ((fromIntegral x) - (center $ t * speed) * (fromIntegral s)) / size)
+cylonEye speed size c s t  = V.generate s (\x -> modC c $ animCos $ (
+                                                (fromIntegral x)
+                                              - (center $ t * speed)
+                                              * (fromIntegral s)
+                                           ) / size)
     where center x = cosify $ abs ((decmComp x) * 2 - 1)
           cosify x = (cos ( (x + 1) * pi)) / 2 + 0.5

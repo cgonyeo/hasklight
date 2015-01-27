@@ -15,9 +15,9 @@ type Color = LED
 
 type TimeDiff = Double
 
-data Animation = TimeOnly (TimeDiff -> Display)
-               | Audio    ([Float] -> Display)
-               | FFT      ([Float] -> Display)
+data Animation = TimeOnly (DisplaySize -> TimeDiff -> Display)
+               | Audio    (DisplaySize -> [Float] -> Display)
+               | FFT      (DisplaySize -> [Float] -> Display)
 
 add :: Display -> Display -> Display
 add = V.zipWith (\(LED r b g) (LED r' b' g') -> LED (f r r') (f b b') (f g g'))

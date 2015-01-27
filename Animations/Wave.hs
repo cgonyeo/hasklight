@@ -1,5 +1,6 @@
 module Animations.Wave where
 
+import qualified Data.Vector as V
 import Animations.LED
 
 wave :: Double -- speed
@@ -9,15 +10,25 @@ wave :: Double -- speed
      -> DisplaySize
      -> TimeDiff
      -> Display
-wave speed size freq c s t = colors
-        where center = decmComp $ speed * t
-              strengths = map (wavefunc s center) [0..(fromIntegral (s - 1))]
-              colors = map (modC c) strengths
-
-wavefunc :: DisplaySize -> Double -> Int -> Double
-wavefunc l c x = animCos distance
-        where fx = (fromIntegral x) / (fromIntegral l)
-              x' = if x < l `div` 2
-                       then (0.5 - fx) * 2 -- from 0->1 to 0.5->0
-                       else (fx - 0.5) * 2 -- from 0->1 to 0.5->1
-              distance = (x' - (c * 2 - 0.5))
+wave speed size freq c s t = disp
+    where centers = V.generate (ceiling freq)
+                         (\x ->
+                           (decmComp
+                               (if freq >= 1
+                                    then t * speed
+                                    else t * speed * freq
+                               )
+                           ) / freq + ((fromIntegral x) / freq)
+                         )
+          disp = V.generate s 
+                         (\x -> modC c $ animCos $
+                           ((fromIntegral x)
+                            - (V.foldr' (\y a
+                                          -> let loc = (fromIntegral x)
+                                                     / (fromIntegral s)
+                                             in if abs (a - loc) < abs (y - loc)
+                                                    then a
+                                                    else y
+                                         ) 2 centers)
+                            * (fromIntegral s)
+                           ) / size)
