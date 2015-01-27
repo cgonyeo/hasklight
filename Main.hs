@@ -1,11 +1,10 @@
 import Control.Concurrent
-import Control.Monad
 import System.Clock
 import qualified Data.Vector as V
 
 import Audio.Audio
 import Animations.LED
---import Animations.SetAll
+import Animations.SetAll
 import Animations.CylonEye
 --import Animations.Wave
 --import Animations.Volume
@@ -13,16 +12,16 @@ import Animations.CylonEye
 import TLC5947.TLC5947
 
 animList :: V.Vector Animation
-animList = V.fromList [ TimeOnly (cylonEye 0.5 3 (LED 100 0 0) 64)
-                      , TimeOnly (cylonEye 0.5 3 (LED 100 0 0) 64)
-                      , TimeOnly (cylonEye 0.5 3 (LED 100 0 0) 64)
-                      , TimeOnly (cylonEye 0.5 3 (LED 100 0 0) 64)
-                      , TimeOnly (cylonEye 0.5 3 (LED 100 0 0) 64)
-                      , TimeOnly (cylonEye 0.5 3 (LED 100 0 0) 64)
-                      , TimeOnly (cylonEye 0.5 3 (LED 100 0 0) 64)
-                      , TimeOnly (cylonEye 0.5 3 (LED 100 0 0) 64)
-                      , TimeOnly (cylonEye 0.5 3 (LED 100 0 0) 64)
-                      , TimeOnly (cylonEye 0.5 3 (LED 100 0 0) 64)
+animList = V.fromList [ TimeOnly (cylonEye 0.3 4 (LED 100 0 0) 64)
+                      , TimeOnly (cylonEye 0.3 4 (LED 100 0 0) 64)
+                      , TimeOnly (cylonEye 0.3 4 (LED 100 0 0) 64)
+                      , TimeOnly (cylonEye 0.3 4 (LED 100 0 0) 64)
+                      , TimeOnly (cylonEye 0.3 4 (LED 100 0 0) 64)
+                      , TimeOnly (cylonEye 0.3 4 (LED 100 0 0) 64)
+                      , TimeOnly (cylonEye 0.3 4 (LED 100 0 0) 64)
+                      , TimeOnly (cylonEye 0.3 4 (LED 100 0 0) 64)
+                      , TimeOnly (cylonEye 0.3 4 (LED 100 0 0) 64)
+                      , TimeOnly (cylonEye 0.3 4 (LED 100 0 0) 64)
                       --, TimeOnly (wave 0.2 2 1 (LED 70 0 0) 64)
                       --, Audio    (volume (LED 0 0 0) 64)
                       ]
@@ -47,10 +46,7 @@ main = do tlcInit
 runOdd :: TimeDiff -> Int -> IO ()
 runOdd t' c = do (TimeSpec s ns) <- getTime Monotonic
                  sound <- getSoundBuffer
-                 fftvals <- if (V.foldr (\x a -> case x of
-                                                     FFT _ -> True
-                                                     _     -> False || a
-                                        ) False animList) then return [] else runFFT
+                 fftvals <- runFFT
                  let t = (fromIntegral s) + ((fromIntegral ns) / 10^(9 :: Int))
                      disp = V.foldr (\x a -> case x of
                                                  TimeOnly f -> add (f t) a

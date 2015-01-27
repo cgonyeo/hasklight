@@ -44,7 +44,7 @@ modC :: Color -> Double -> LED
 modC (LED r g b) s = LED (scaleInt r s) (scaleInt g s) (scaleInt b s)
 
 --Piecewise cosine function. If between -0.5 and 0.5, curves from 0 at
--- -0.5, to 1 at 0, and back to 0 at 0.5, and it 0 at all other places.
+-- -0.5, to 1 at 0, and back to 0 at 0.5, and is 0 at all other places.
 animCos :: (Floating a,Fractional a,Ord a) => a -> a
 animCos x = if x >= (-0.5) && x <= 0.5
                 then ((cos ((x + 0.5) * 2 * pi)) / 2 - 0.5) * (-1)
