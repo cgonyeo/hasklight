@@ -6,5 +6,5 @@ import Animations.LED
 setAll :: Color
        -> DisplaySize
        -> TimeDiff
-       -> Display
-setAll c s _ = V.replicate s c
+       -> (Display,Animation)
+setAll c s _ = (V.replicate s c,TimeOnly $ setAll c)

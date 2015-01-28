@@ -3,22 +3,29 @@ module Animations.Mirrors where
 import qualified Data.Vector as V
 import Animations.LED
 
-timeMirror :: (DisplaySize -> TimeDiff -> Display)
+addMirror :: Animation -> Animation
+addMirror a = case a of
+                  TimeOnly f -> TimeOnly $ timeMirror f
+                  Audio f -> Audio $ audioMirror f
+                  FFT f -> FFT $ fftMirror f
+
+timeMirror :: (DisplaySize -> TimeDiff -> (Display,Animation))
            -> DisplaySize
            -> TimeDiff
-           -> Display
-timeMirror f s t = (V.reverse half) V.++ half
-        where half = f (s `div` 2) t
+           -> (Display,Animation)
+timeMirror f s t = ((V.reverse half) V.++ half,addMirror anim)
+        where (half,anim) = f (s `div` 2) t
 
-audioMirror :: (DisplaySize -> [Float] -> Display)
+audioMirror :: (DisplaySize -> [Float] -> (Display,Animation))
             -> DisplaySize
             -> [Float]
-            -> Display
-audioMirror f s a = (V.reverse half) V.++ half
-        where half = f (s `div` 2) a
+            -> (Display,Animation)
+audioMirror f s a = ((V.reverse half) V.++ half,addMirror anim)
+        where (half,anim) = f (s `div` 2) a
 
-fftMirror :: (DisplaySize -> [Float] -> Display)
+fftMirror :: (DisplaySize -> [Float] -> (Display,Animation))
           -> DisplaySize
           -> [Float]
-          -> Display
-fftMirror = audioMirror
+          -> (Display,Animation)
+fftMirror f s a = ((V.reverse half) V.++ half,addMirror anim)
+        where (half,anim) = f (s `div` 2) a

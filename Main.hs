@@ -12,8 +12,8 @@ import Animations.Spectrum
 import Animations.Mirrors
 import TLC5947.TLC5947
 
-animList :: V.Vector Animation
-animList = V.fromList [ TimeOnly (timeMirror (wave 1 4 1 (LED 20 0 0)))
+startAnimList :: V.Vector (Animation,BlendingMode)
+startAnimList = V.fromList [ (TimeOnly (setAll (LED 20 0 0)),add)
                       --, TimeOnly (wave 1 4 1 (LED 100 0 0))
                       --, TimeOnly (wave 1 4 1 (LED 100 0 0))
                       --, TimeOnly (wave 1 4 1 (LED 100 0 0))
@@ -43,22 +43,27 @@ updateDisp disp = do tlcClearLeds
 main :: IO ()
 main = do tlcInit
           audioInitialization
-          runOdd 0 0
+          runOdd startAnimList 0 0
 
-runOdd :: TimeDiff -> Int -> IO ()
-runOdd t' c = do
+runOdd :: V.Vector (Animation,BlendingMode) -> TimeDiff -> Int -> IO ()
+runOdd animList t' c = do
         (TimeSpec s ns) <- getTime Monotonic
         sound <- getSoundBuffer
         fftvals <- runFFT
         let t = (fromIntegral s) + ((fromIntegral ns) / 10^(9 :: Int))
-            disp = V.foldr (\x a -> case x of
-                                        TimeOnly f -> add (f 64 t) a
-                                        Audio    f -> add (f 64 sound) a
-                                        FFT      f -> add (f 64 fftvals) a
-                           ) emptyDisplay animList
+            (layers,animList') = V.unzip $ 
+                V.map (\x -> case x of
+                                 (TimeOnly f,bl) -> let (dis,anim) = (f 64 t)
+                                                    in (bl dis,(anim,bl))
+                                 (Audio f,bl) -> let (dis,anim) = (f 64 sound)
+                                                    in (bl dis,(anim,bl))
+                                 (FFT f,bl) -> let (dis,anim) = (f 64 fftvals)
+                                                    in (bl dis,(anim,bl))
+                      ) animList
+            disp = V.foldr' (\x a -> x a) emptyDisplay layers
         updateDisp disp
         print $ V.toList $ V.map (\(LED r _ _) -> r) disp
         if t - t' >= 1
             then do putStrLn $ "Current framerate: " ++ show c
-                    runOdd t 0
-            else runOdd t' (c+1)
+                    runOdd animList' t 0
+            else runOdd animList' t' (c+1)

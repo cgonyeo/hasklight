@@ -15,21 +15,28 @@ type Color = LED
 
 type TimeDiff = Double
 
-data Animation = TimeOnly (DisplaySize -> TimeDiff -> Display)
-               | Audio    (DisplaySize -> [Float] -> Display)
-               | FFT      (DisplaySize -> [Float] -> Display)
+type BlendingMode = Display -> Display -> Display
+
+data Animation = TimeOnly (DisplaySize -> TimeDiff -> (Display,Animation))
+               | Audio    (DisplaySize -> [Float]  -> (Display,Animation))
+               | FFT      (DisplaySize -> [Float]  -> (Display,Animation))
+
+ledBounds :: Int -> Int
+ledBounds = (max 0) . (min 4095)
 
 add :: Display -> Display -> Display
 add = V.zipWith (\(LED r b g) (LED r' b' g') -> LED (f r r') (f b b') (f g g'))
-    where f a b = if a + b < 4096
-                      then a + b
-                      else 4095
+    where f a b = ledBounds $ a + b
 
 sub :: Display -> Display -> Display
 sub = V.zipWith (\(LED r b g) (LED r' b' g') -> LED (f r r') (f b b') (f g g'))
-    where f a b = if a - b >= 0
-                      then a - b
-                      else 0
+    where f a b = ledBounds $ b - a
+
+mult :: Display -> Display -> Display
+mult = V.zipWith (\(LED r b g) (LED r' b' g') -> LED (f r r') (f b b') (f g g'))
+    where f a b = ledBounds
+                $ floor
+                $ (fromIntegral b :: Double) * (fromIntegral a) / 4096
 
 --Scales an Integer value by a given amount, and keeps it within a range of
 --valid LED values (a 12 bit positive integer).

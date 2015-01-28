@@ -7,8 +7,8 @@ import Animations.LED
 volume :: Color
        -> DisplaySize
        -> [Float]
-       -> Display
-volume c size sound = colors
+       -> (Display,Animation)
+volume c size sound = (colors,Audio $ volume c)
     where strength = foldr (\x a -> (abs x) + a) 0 sound
                    / (fromIntegral $ length sound)
           scale = float2Double $ 1.5 * (log $ strength * 100) / 6.643856

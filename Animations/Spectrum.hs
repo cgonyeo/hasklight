@@ -7,8 +7,8 @@ import Animations.LED
 spectrum :: Color
          -> DisplaySize
          -> [Float]
-         -> Display
-spectrum c size bands = colors
+         -> (Display,Animation)
+spectrum c size bands = (colors,FFT $ spectrum c)
         where s' = fromIntegral size :: Double
               rangebounds = V.snoc (V.generate size (\x -> floor $ ((fromIntegral x) / s') ** 2 * (1024))) 1024
               ranges = V.map (\(x,y) -> if x /= y then (x,y) else (x,y+1)) $ V.zip rangebounds (V.tail rangebounds)
