@@ -2,7 +2,7 @@
 #define Audio
 
 //Audio related stuff
-#define BUFSIZE (1024)
+#define BUFSIZE (2048)
 typedef float SAMPLE;
 
 void audioInitialization();

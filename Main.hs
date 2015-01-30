@@ -13,7 +13,7 @@ import Animations.Mirrors
 import TLC5947.TLC5947
 
 startAnimList :: V.Vector (Animation,BlendingMode)
-startAnimList = V.fromList [ (TimeOnly (setAll (LED 20 0 0)),add)
+startAnimList = V.fromList [ (TimeOnly (setAll (LED 0 0 0)),add)
                       --, TimeOnly (wave 1 4 1 (LED 100 0 0))
                       --, TimeOnly (wave 1 4 1 (LED 100 0 0))
                       --, TimeOnly (wave 1 4 1 (LED 100 0 0))
@@ -24,8 +24,8 @@ startAnimList = V.fromList [ (TimeOnly (setAll (LED 20 0 0)),add)
                       --, TimeOnly (wave 1 4 1 (LED 100 0 0))
                       --, TimeOnly (wave 1 4 1 (LED 100 0 0))
                       --, TimeOnly (wave 0.2 2 1 (LED 70 0 0))
-                      --, Audio (volume (LED 20 0 0))
-                      --, FFT (spectrum (LED 20 0 0))
+                      , (Audio $ audioMirror $ volume (LED 1000 0 0), add)
+                      --, (FFT $ fftMirror $ spectrum (LED 0 1000 2000),add)
                       ]
 
 emptyDisplay :: Display
@@ -48,9 +48,10 @@ main = do tlcInit
 runOdd :: V.Vector (Animation,BlendingMode) -> TimeDiff -> Int -> IO ()
 runOdd animList t' c = do
         (TimeSpec s ns) <- getTime Monotonic
-        sound <- getSoundBuffer
+        sound' <- getSoundBuffer
         fftvals <- runFFT
         let t = (fromIntegral s) + ((fromIntegral ns) / 10^(9 :: Int))
+            sound = drop (length sound' `div` 2) sound'
             (layers,animList') = V.unzip $ 
                 V.map (\x -> case x of
                                  (TimeOnly f,bl) -> let (dis,anim) = (f 64 t)
@@ -61,8 +62,9 @@ runOdd animList t' c = do
                                                     in (bl dis,(anim,bl))
                       ) animList
             disp = V.foldr' (\x a -> x a) emptyDisplay layers
+        --print $ V.toList $ dfgsdfg fftvals
+        --putStrLn "------"
         updateDisp disp
-        print $ V.toList $ V.map (\(LED r _ _) -> r) disp
         if t - t' >= 1
             then do putStrLn $ "Current framerate: " ++ show c
                     runOdd animList' t 0

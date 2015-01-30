@@ -32,7 +32,7 @@ float hann_window(int sample, int num_samples) {
 SAMPLE *getSoundBuffer() {
     pthread_mutex_lock(&storageLock);
     for(int i = 0; i < BUFSIZE; i++)
-        readbuf[i] = storage[i] * hann_window(i, BUFSIZE);
+        readbuf[i] = storage[i];
     pthread_mutex_unlock(&storageLock);
     return readbuf;
 }
@@ -41,7 +41,7 @@ SAMPLE *runFFT()
 {
     pthread_mutex_lock(&storageLock);
     for(int i = 0; i < BUFSIZE; i++)
-        in[i][0] = storage[i];
+        in[i][0] = storage[i] * hann_window(i, BUFSIZE);
     pthread_mutex_unlock(&storageLock);
     fftw_execute(plan);
     for(int i = 0; i < BUFSIZE; i++)
@@ -56,17 +56,17 @@ SAMPLE *runFFT()
  */
 void *processAudio(void *arg) {
     snd_pcm_t *capture_handle = (snd_pcm_t *)arg;
-    short buf[BUFSIZE];
+    short buf[BUFSIZE / 2];
     int err;
     while(1) {
-        if ((err = snd_pcm_readi (capture_handle, buf, BUFSIZE)) != BUFSIZE) {
+        if ((err = snd_pcm_readi (capture_handle, buf, BUFSIZE / 2)) != BUFSIZE / 2) {
             fprintf (stderr, "read from audio interface failed (%s)\n", 
             snd_strerror (err)); 
-            exit (1); 
         } 
         pthread_mutex_lock(&storageLock);
-        for(int i = 0; i < BUFSIZE; i++) {
-            storage[i] = (SAMPLE) buf[i] / 32768.0;
+        for(int i = 0; i < BUFSIZE / 2; i++) {
+            storage[i] = storage[BUFSIZE / 2 + i];
+            storage[BUFSIZE / 2 + i] = (SAMPLE) buf[i] / 32768.0;
         }
         pthread_mutex_unlock(&storageLock);
     }

@@ -11,7 +11,7 @@ volume :: Color
 volume c size sound = (colors,Audio $ volume c)
     where strength = foldr (\x a -> (abs x) + a) 0 sound
                    / (fromIntegral $ length sound)
-          scale = float2Double $ 1.5 * (log $ strength * 100) / 6.643856
+          scale = float2Double $ 1.3 * (log $ strength * 100) / 6.643856
           colors = V.generate size
                         (\x -> if (fromIntegral x) / (fromIntegral size) < scale
                                    then modC c scale
