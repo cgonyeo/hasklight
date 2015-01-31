@@ -1,6 +1,8 @@
 import Control.Concurrent
+import Control.Concurrent.MVar
 import System.Clock
 import qualified Data.Vector as V
+import Snap.Http.Server
 
 import Audio.Audio
 import Animations.LED
@@ -11,9 +13,11 @@ import Animations.Volume
 import Animations.Spectrum
 import Animations.Mirrors
 import TLC5947.TLC5947
+import Site.Site
 
-startAnimList :: V.Vector (Animation,BlendingMode)
-startAnimList = V.fromList [ (TimeOnly (setAll (LED 0 0 0)),add)
+startAnimList :: IO (MVar (V.Vector (Animation,BlendingMode)))
+startAnimList = newMVar $
+           V.fromList [ (TimeOnly (setAll (LED 0 0 0)),add)
                       --, TimeOnly (wave 1 4 1 (LED 100 0 0))
                       --, TimeOnly (wave 1 4 1 (LED 100 0 0))
                       --, TimeOnly (wave 1 4 1 (LED 100 0 0))
@@ -24,8 +28,8 @@ startAnimList = V.fromList [ (TimeOnly (setAll (LED 0 0 0)),add)
                       --, TimeOnly (wave 1 4 1 (LED 100 0 0))
                       --, TimeOnly (wave 1 4 1 (LED 100 0 0))
                       --, TimeOnly (wave 0.2 2 1 (LED 70 0 0))
-                      , (Audio $ audioMirror $ volume (LED 1000 0 0), add)
-                      --, (FFT $ fftMirror $ spectrum (LED 0 1000 2000),add)
+                      --, (Audio $ audioMirror $ volume (LED 1000 0 0), add)
+                      , (FFT $ spectrum (LED 0 1000 2000),add)
                       ]
 
 emptyDisplay :: Display
@@ -43,13 +47,16 @@ updateDisp disp = do tlcClearLeds
 main :: IO ()
 main = do tlcInit
           audioInitialization
-          runOdd startAnimList 0 0
+          al <- startAnimList
+          forkIO $ quickHttpServe $ site al
+          runOdd al 0 0
 
-runOdd :: V.Vector (Animation,BlendingMode) -> TimeDiff -> Int -> IO ()
-runOdd animList t' c = do
+runOdd :: MVar (V.Vector (Animation,BlendingMode)) -> TimeDiff -> Int -> IO ()
+runOdd animListM t' c = do
         (TimeSpec s ns) <- getTime Monotonic
         sound' <- getSoundBuffer
         fftvals <- runFFT
+        animList <- takeMVar animListM
         let t = (fromIntegral s) + ((fromIntegral ns) / 10^(9 :: Int))
             sound = drop (length sound' `div` 2) sound'
             (layers,animList') = V.unzip $ 
@@ -65,7 +72,8 @@ runOdd animList t' c = do
         --print $ V.toList $ dfgsdfg fftvals
         --putStrLn "------"
         updateDisp disp
+        putMVar animListM animList'
         if t - t' >= 1
             then do putStrLn $ "Current framerate: " ++ show c
-                    runOdd animList' t 0
-            else runOdd animList' t' (c+1)
+                    runOdd animListM t 0
+            else runOdd animListM t' (c+1)
