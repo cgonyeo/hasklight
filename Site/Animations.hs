@@ -4,15 +4,14 @@ import Animations.LED
 
 data AvailAnim = AvailAnim { animName :: String
                            , animOpts :: [AnimOpt]
-}
+                           }
 
-data AnimOpt = DoubleOpt Double Double
-             | IntOpt Int Int
-             | ColorOpt
-             | ColorList
-             | BoolOpt
-             | AnimOpt
-             | AnimList
+data AnimOpt = DoubleOpt String Double Double
+             | IntOpt String Int Int
+             | ColorOpt String
+             | ColorList String
+             | BoolOpt String
+             | AnimOpt String
 
 data AnimMetadata = CylonEye Double Double Color
                   | Mirror AnimMetadata
@@ -28,17 +27,17 @@ blendingOpts = [ "Add"
                ]
 
 availAnims :: [AvailAnim]
-availAnims = [ AvailAnim "Cylon Eye" [ DoubleOpt 0.01 10
-                                     , DoubleOpt 0.5 64
-                                     , ColorOpt
+availAnims = [ AvailAnim "Cylon Eye" [ DoubleOpt "Speed" 0.01 10
+                                     , DoubleOpt "Size "0.5 64
+                                     , ColorOpt "Color"
                                      ]
-             , AvailAnim "Mirror"    [ AnimOpt ]
-             , AvailAnim "Set All"   [ ColorOpt ]
-             , AvailAnim "Spectrum"  [ ColorOpt ]
-             , AvailAnim "Volume"    [ ColorOpt ]
-             , AvailAnim "Wave"      [ DoubleOpt 0.01 10
-                                     , DoubleOpt 0.5 64
-                                     , DoubleOpt 0.1 8
-                                     , ColorOpt
+             , AvailAnim "Mirror"    [ AnimOpt "Animation" ]
+             , AvailAnim "Set All"   [ ColorOpt "Color" ]
+             , AvailAnim "Spectrum"  [ ColorOpt "Color" ]
+             , AvailAnim "Volume"    [ ColorOpt "Color" ]
+             , AvailAnim "Wave"      [ DoubleOpt "Speed" 0.01 10
+                                     , DoubleOpt "Size" 0.5 64
+                                     , DoubleOpt "Frequency" 0.1 8
+                                     , ColorOpt "Color"
                                      ]
              ]

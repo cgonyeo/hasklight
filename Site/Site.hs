@@ -28,7 +28,7 @@ site m = do
             <|> route [ ("foo", writeBS "bar")
                       , ("echo/:echoparam", writeBS "lol")
                       ]
-            <|> dir "static" (serveDirectory ".")
+            <|> dir "static" (serveDirectory "static")
 
 rootHandler :: MVar [AnimMetadata] -> Snap ()
 rootHandler animmeta = do curranims <- liftIO $ readMVar animmeta
