@@ -17,9 +17,12 @@ rootPage m = docTypeHtml $ do
                     link ! rel "stylesheet" ! href "/static/css/colpick.css"
                     link ! rel "stylesheet" ! href "/static/css/rootpage.css"
                     script ! src "http://code.jquery.com/jquery-2.1.3.min.js" $ ""
+                    script ! src "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js" $ ""
                     script ! src "/static/js/numbervalidation.js" $ ""
                     script ! src "/static/js/colpick.js" $ ""
-                    script ! src "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js" $ ""
+                    script ! src "/static/js/ByteBufferAB.min.js" $ ""
+                    script ! src "/static/js/Long.min.js" $ ""
+                    script ! src "/static/js/ProtoBuf.min.js" $ ""
                     script ! src "/static/js/rootpage.js" $ ""
                 body $ do
                     nav ! class_ "navbar navbar-default" ! customAttribute "role" "navigation" $ do
@@ -88,19 +91,19 @@ renderAvailAnim num (AvailAnim nam opts) =
                 H.div ! class_ "panel-body" $ do
                     H.div ! class_ "row" $ do
                         H.div ! class_ "col-xs-8" $
-                            h3 $ toHtml nam
+                            h3 ! class_ "anim-name" $ toHtml nam
                         H.div ! class_ "col-xs-2" $ 
-                            select ! class_ "form-control" $ do
+                            select ! class_ "form-control anim-bl" $ do
                                 forM_ blendingOpts (\x -> option $ toHtml x)
                         H.div ! class_ "col-xs-2" $ do
-                            button ! class_ "btn btn-default" $ 
+                            button ! class_ "btn btn-default anim-down" $ 
                                 H.span ! class_ "glyphicon glyphicon-menu-down" $ ""
-                            button ! class_ "btn btn-default" $ 
+                            button ! class_ "btn btn-default anim-up" $ 
                                 H.span ! class_ "glyphicon glyphicon-menu-up" $ ""
                             button ! class_ "btn btn-default del-anim" $ 
                                 H.span ! class_ "glyphicon glyphicon-remove" $ ""
                     hr
-                    H.div ! class_ "row" $ 
+                    H.div ! A.id "anims-container" ! class_ "row" $ 
                         forM_ opts
                             (\opt -> H.div ! class_ "col-md-4" $ 
                                      case opt of
@@ -108,20 +111,20 @@ renderAvailAnim num (AvailAnim nam opts) =
                                              H.label $ toHtml n
                                              br
                                              input ! type_ "number"
-                                                   ! class_ "num-doub form-control"
+                                                   ! class_ "num-doub form-control doubleopt"
                                                    ! onchange (toValue ("handlechange(this, " ++ show l ++ "," ++ show h ++ ",true);"))
                                                    ! value (toValue $ (l + h) / 2)
                                          IntOpt n l h -> do
                                              H.label $ toHtml n
                                              br
                                              input ! type_ "number"
-                                                   ! class_ "num-doub form-control"
+                                                   ! class_ "num-doub form-control intopt"
                                                    ! onchange (toValue ("handlechange(this, " ++ show l ++ "," ++ show h ++ ",false);"))
                                                    ! value (toValue $ (l + h) `Prelude.div` 2)
                                          ColorOpt n -> do
                                              H.label $ toHtml n
                                              br
-                                             button ! class_ "btn btn-default colors" $ " "
+                                             button ! class_ "btn btn-default colors coloropt" $ " "
                                          ColorList n -> do
                                              H.label $ toHtml n
                                          BoolOpt n -> do
