@@ -20,9 +20,6 @@ rootPage m = docTypeHtml $ do
                     script ! src "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js" $ ""
                     script ! src "/static/js/numbervalidation.js" $ ""
                     script ! src "/static/js/colpick.js" $ ""
-                    script ! src "/static/js/ByteBufferAB.min.js" $ ""
-                    script ! src "/static/js/Long.min.js" $ ""
-                    script ! src "/static/js/ProtoBuf.min.js" $ ""
                     script ! src "/static/js/rootpage.js" $ ""
                 body $ do
                     nav ! class_ "navbar navbar-default" ! customAttribute "role" "navigation" $ do

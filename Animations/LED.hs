@@ -1,6 +1,9 @@
 module Animations.LED where
 
 import qualified Data.Vector as V
+import Text.JSON
+import Control.Applicative
+import Control.Monad
 
 data LED = LED { red   :: Int
                , blue  :: Int

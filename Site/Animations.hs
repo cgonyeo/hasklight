@@ -19,6 +19,7 @@ data AnimMetadata = CylonEye Double Double Color
                   | Spectrum Color
                   | Volume Color
                   | Wave Double Double Double Color
+                  deriving(Show,Eq)
 
 blendingOpts :: [String]
 blendingOpts = [ "Add"

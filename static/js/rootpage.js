@@ -56,49 +56,43 @@ $( document ).ready(function() {
         animDown();
         addedanims.push(newanim.attr("id"))
     });
-    var ProtoBuf = dcodeIO.ProtoBuf;
-    ProtoBuf.loadProtoFile("/static/rootpage.proto", function(err, builder) {
-        var Animations = builder.build("Animations")
-        $("#okbtn").click(function() {
-            addedanims.sort(function(a,b) { return $("#" + a).index() - $("#" + b).index(); } );
-            anims = [];
-            for(i = 0; i < addedanims.length; i++) {
-                animobj = $("#" + addedanims[i]);
-                params = [];
-                paramobjs = animobj.find("input.doubleopt, input.intopt, button.coloropt");
-                for(j = 0; j < paramobjs.length; j++) {
-                    paramobj = $(paramobjs[j]);
-                    if(paramobj.is("input.doubleopt")) {
-                        params.push( { "type"      : "Double"
-                                     , "doubleopt" : parseFloat(paramobj.val())
-                                     }
-                        );
-                    }
-                    if(paramobj.is("input.intopt")) {
-                        params.push( { "type"   : "Int"
-                                     , "intopt" : parseInt(paramobj.val())
-                                     }
-                        );
-                    }
-                    if(paramobj.is("button.coloropt")) {
-                        params.push( { "type"     : "Color"
-                                     , "coloropt" : { "red"   : 0
-                                                    , "green" : 0
-                                                    , "blue"  : 0
-                                                    }
-                                     }
-                        );
-                    }
+    $("#okbtn").click(function() {
+        addedanims.sort(function(a,b) { return $("#" + a).index() - $("#" + b).index(); } );
+        anims = [];
+        for(i = 0; i < addedanims.length; i++) {
+            a = $("#" + addedanims[i]);
+            params = [];
+            ps = a.find("input.doubleopt, input.intopt, button.coloropt");
+            for(j = 0; j < ps.length; j++) {
+                p = $(ps[j]);
+                if(p.is("input.doubleopt")) {
+                    params.push( { "double"  : parseFloat(p.val()) }
+                    );
                 }
-                anims.push( { "name" : animobj.find("h3.anim-name")[0].innerHTML
-                            , "params" : params
-                            , "blendingmode" : $(animobj.find("select.anim-bl")[0]).val()
-                            }
-                )
+                if(p.is("input.intopt")) {
+                    params.push( { "int"  : parseInt(p.val()) }
+                    );
+                }
+                if(p.is("button.coloropt")) {
+                    colobj = p[0].style
+                                 .background
+                                 .replace(/[^\d,]/g, '')
+                                 .split(',')
+                    params.push( { "LED"  : { "red"   : parseInt(colobj[0])
+                                            , "green" : parseInt(colobj[1])
+                                            , "blue"  : parseInt(colobj[2])
+                                            }
+                                 }
+                    );
+                }
             }
-            console.log(JSON.stringify(anims));
-            var protoanims = new Animations(anims);
-            console.log(protoanims.encode());
-        });
+            anims.push( { "name" : a.find("h3.anim-name")[0].innerHTML
+                        , "params" : params
+                        , "blendingmode" : $(a.find(".anim-bl")[0]).val()
+                        }
+            )
+        }
+        console.log(JSON.stringify(anims));
+        //$.post("/newanims", { "newanims" : JSON.stringify(anims) } );
     });
 })
