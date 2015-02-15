@@ -18,7 +18,7 @@ cabal-version:       >=1.8
 executable hasklight
   main-is:             Main.hs
   -- other-modules:       
-  build-depends:       base         == 4.6.*
+  build-depends:       base         == 4.7.*
                      , clock        == 0.4.*
                      , vector       == 0.10.*
                      , blaze-html   == 0.7.*

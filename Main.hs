@@ -7,6 +7,7 @@ import Snap.Http.Server
 import Audio.Audio
 import Animations.LED
 import Animations.SetAll
+import Animations.Strobe
 import Animations.CylonEye
 import Animations.Wave
 import Animations.Volume
@@ -17,19 +18,9 @@ import Site.Site
 
 startAnimList :: IO (MVar (V.Vector (Animation,BlendingMode)))
 startAnimList = newMVar $
-           V.fromList [ (TimeOnly (setAll (LED 0 0 0)),add)
-                      --, TimeOnly (wave 1 4 1 (LED 100 0 0))
-                      --, TimeOnly (wave 1 4 1 (LED 100 0 0))
-                      --, TimeOnly (wave 1 4 1 (LED 100 0 0))
-                      --, TimeOnly (wave 1 4 1 (LED 100 0 0))
-                      --, TimeOnly (wave 1 4 1 (LED 100 0 0))
-                      --, TimeOnly (wave 1 4 1 (LED 100 0 0))
-                      --, TimeOnly (wave 1 4 1 (LED 100 0 0))
-                      --, TimeOnly (wave 1 4 1 (LED 100 0 0))
-                      --, TimeOnly (wave 1 4 1 (LED 100 0 0))
-                      --, TimeOnly (wave 0.2 2 1 (LED 70 0 0))
+           V.fromList [ (TimeOnly (cylonEye 0.4 10 (LED 500 0 0)),add)
                       --, (Audio $ audioMirror $ volume (LED 1000 0 0), add)
-                      , (FFT $ spectrum (LED 0 1000 2000),add)
+                      --, (FFT $ spectrum (LED 0 1000 2000),add)
                       ]
 
 emptyDisplay :: Display

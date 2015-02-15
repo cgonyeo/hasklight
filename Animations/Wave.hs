@@ -9,8 +9,8 @@ wave :: Double -- speed
      -> Color
      -> DisplaySize
      -> TimeDiff
-     -> Display
-wave speed size freq c s t = disp
+     -> (Display,Animation)
+wave speed size freq c s t = (disp, TimeOnly $ wave speed size freq c)
     where centers = V.generate (ceiling freq)
                          (\x ->
                            (decmComp
