@@ -28,6 +28,7 @@ executable hasklight
                      , blaze-markup == 0.6.*
                      , bytestring   == 0.10.*
                      , containers   == 0.5.*
+                     , parsec       == 3.1.*
   ghc-options:         -Wall -O3
   extra-libraries:     wiringPi asound fftw3 rt pthread
   extra-lib-dirs:      /usr/local/lib

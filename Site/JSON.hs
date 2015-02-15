@@ -34,45 +34,66 @@ collapseEither xs = case foldr foldfunc (Nothing,[]) xs of
     where foldfunc (Left x) (_,lst) = (Just x, lst)
           foldfunc (Right x) (lefts,lst) = (lefts, x:lst)
 
-parseAnimMeta :: String -> Either String [(AnimMetadata,String)]
+parseBlend :: String -> Maybe BlendingMode
+parseBlend "Add"      = Just add
+parseBlend "Subtract" = Just sub
+parseBlend "Multiply" = Just mult
+parseBlend _          = Nothing
+
+
+parseAnimMeta :: String -> Either String [(AnimMetadata,BlendingMode)]
 parseAnimMeta input =
         case parseJson input of
             Right (JArray jary) -> collapseEither $ parseMetas $ fromJAry jary
             Left e -> Left $ show e
-            otherwise -> Left "Valid json, but not an array"
+            _ -> Left "Valid json, but not an array"
     where parseMetas [] = []
           parseMetas ((JObject (JObj [("name",JString name),("params",(JArray (JAry jary))),("blendingmode",(JString mode))])):xs) =
                                                 case name of
-                                                    "Cylon Eye" -> case jary of
-                                                                       [  JObject (JObj [ ("double",(JNumber speed)) ])
+                                                    "Cylon Eye" -> case (jary,parseBlend mode) of
+                                                                       ([ JObject (JObj [ ("double",(JNumber speed)) ])
                                                                         , JObject (JObj [ ("double",(JNumber size)) ])
                                                                         , JObject (JObj [ ("LED",JObject (JObj [ ("red",   (JNumber r))
                                                                                                                , ("green", (JNumber g))
                                                                                                                , ("blue",  (JNumber b))
                                                                                                                ]))
                                                                                         ])
-                                                                        ] -> (Right $ (CylonEye speed size (LED (floor r) (floor g) (floor b)),mode)):(parseMetas xs)
-                                                    "Set All"  -> case jary of
-                                                                       [ JObject (JObj [ ("LED",JObject (JObj [ ("red",   (JNumber r))
+                                                                        ],Just m) -> (Right $ (CylonEye speed size (LED (floor r) (floor g) (floor b)),m)):(parseMetas xs)
+                                                                       _ -> [Left "Invalid animation parameters"]
+                                                    "Set All"  -> case (jary,parseBlend mode) of
+                                                                       ([ JObject (JObj [ ("LED",JObject (JObj [ ("red",   (JNumber r))
                                                                                                                , ("green", (JNumber g))
                                                                                                                , ("blue",  (JNumber b))
                                                                                                                ]))
                                                                                         ])
-                                                                        ] -> (Right $ (SetAll (LED (floor r) (floor g) (floor b)),mode)):(parseMetas xs)
-                                                    "Spectrum" -> case jary of
-                                                                       [ JObject (JObj [ ("LED",JObject (JObj [ ("red",   (JNumber r))
+                                                                        ],Just m) -> (Right $ (SetAll (LED (floor r) (floor g) (floor b)),m)):(parseMetas xs)
+                                                                       _ -> [Left "Invalid animation parameters"]
+                                                    "Wave"     -> case (jary,parseBlend mode) of
+                                                                       ([ JObject (JObj [ ("double",(JNumber speed)) ])
+                                                                        , JObject (JObj [ ("double",(JNumber size)) ])
+                                                                        , JObject (JObj [ ("double",(JNumber freq)) ])
+                                                                        , JObject (JObj [ ("LED",JObject (JObj [ ("red",   (JNumber r))
                                                                                                                , ("green", (JNumber g))
                                                                                                                , ("blue",  (JNumber b))
                                                                                                                ]))
                                                                                         ])
-                                                                        ] -> (Right $ (Spectrum (LED (floor r) (floor g) (floor b)),mode)):(parseMetas xs)
-                                                    "Volume"   -> case jary of
-                                                                       [ JObject (JObj [ ("LED",JObject (JObj [ ("red",   (JNumber r))
+                                                                        ],Just m) -> (Right $ (Wave speed size freq (LED (floor r) (floor g) (floor b)),m)):(parseMetas xs)
+                                                                       _ -> [Left "Invalid animation parameters"]
+                                                    "Spectrum" -> case (jary,parseBlend mode) of
+                                                                       ([ JObject (JObj [ ("LED",JObject (JObj [ ("red",   (JNumber r))
                                                                                                                , ("green", (JNumber g))
                                                                                                                , ("blue",  (JNumber b))
                                                                                                                ]))
                                                                                         ])
-                                                                        ] -> (Right $ (Volume (LED (floor r) (floor g) (floor b)),mode)):(parseMetas xs)
+                                                                        ],Just m) -> (Right $ (Spectrum (LED (floor r) (floor g) (floor b)),m)):(parseMetas xs)
+                                                    "Volume"   -> case (jary,parseBlend mode) of
+                                                                       ([ JObject (JObj [ ("LED",JObject (JObj [ ("red",   (JNumber r))
+                                                                                                               , ("green", (JNumber g))
+                                                                                                               , ("blue",  (JNumber b))
+                                                                                                               ]))
+                                                                                        ])
+                                                                        ],Just m) -> (Right $ (Volume (LED (floor r) (floor g) (floor b)),m)):(parseMetas xs)
+                                                                       _ -> [Left "Invalid animation parameters"]
                                                     _ -> [Left $ "Unknown animation: " ++ name]
           parseMetas _ = [Left "Invalid json found"]
 

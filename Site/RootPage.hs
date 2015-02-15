@@ -5,10 +5,11 @@ import Text.Blaze.Html
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import Control.Monad
+import Animations.LED
 
 import Site.Animations
 
-rootPage :: [AnimMetadata] -> Html
+rootPage :: [(AnimMetadata,BlendingMode)] -> Html
 rootPage m = docTypeHtml $ do
                 H.head $ do
                     H.title "ODD"

@@ -93,6 +93,6 @@ $( document ).ready(function() {
             )
         }
         console.log(JSON.stringify(anims));
-        //$.post("/newanims", { "newanims" : JSON.stringify(anims) } );
+        $.post("/newanims", { "newanims" : JSON.stringify(anims) } );
     });
 })
