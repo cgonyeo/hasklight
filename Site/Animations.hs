@@ -19,22 +19,6 @@ data AnimOpt = DoubleOpt String Double Double
              | BoolOpt String
              | AnimOpt String
 
-data AnimMetadata = CylonEye Double Double Color
-                  | Mirror AnimMetadata
-                  | SetAll Color
-                  | Spectrum Color
-                  | Volume Color
-                  | Wave Double Double Double Color
-                  deriving(Show,Eq)
-
-metaToAnims :: (AnimMetadata,BlendingMode) -> (Animation,BlendingMode)
-metaToAnims (am,bl) = case am of
-                          CylonEye a b c -> (TimeOnly $ cylonEye a b c,bl)
-                          SetAll a       -> (TimeOnly $ setAll a,bl)
-                          Spectrum a     -> (FFT $ spectrum a,bl)
-                          Volume a       -> (Audio $ volume a,bl)
-                          Wave a b c d   -> (TimeOnly $ wave a b c d,bl)
-
 blendingOpts :: [String]
 blendingOpts = [ "Add"
                , "Subtract"

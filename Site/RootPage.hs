@@ -8,8 +8,9 @@ import Control.Monad
 import Animations.LED
 
 import Site.Animations
+import Site.JSON
 
-rootPage :: [(AnimMetadata,BlendingMode)] -> Html
+rootPage :: [AnimMetadata] -> Html
 rootPage m = docTypeHtml $ do
                 H.head $ do
                     H.title "ODD"

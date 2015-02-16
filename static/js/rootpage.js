@@ -66,11 +66,11 @@ $( document ).ready(function() {
             for(j = 0; j < ps.length; j++) {
                 p = $(ps[j]);
                 if(p.is("input.doubleopt")) {
-                    params.push( { "double"  : parseFloat(p.val()) }
+                    params.push( { "AnimDouble"  : parseFloat(p.val()) }
                     );
                 }
                 if(p.is("input.intopt")) {
-                    params.push( { "int"  : parseInt(p.val()) }
+                    params.push( { "AnimInt"  : parseInt(p.val()) }
                     );
                 }
                 if(p.is("button.coloropt")) {
@@ -78,10 +78,10 @@ $( document ).ready(function() {
                                  .background
                                  .replace(/[^\d,]/g, '')
                                  .split(',')
-                    params.push( { "LED"  : { "red"   : parseInt(colobj[0])
-                                            , "green" : parseInt(colobj[1])
-                                            , "blue"  : parseInt(colobj[2])
-                                            }
+                    params.push( { "AnimLED"  : { "red"   : parseInt(colobj[0])
+                                                , "green" : parseInt(colobj[1])
+                                                , "blue"  : parseInt(colobj[2])
+                                                }
                                  }
                     );
                 }

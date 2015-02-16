@@ -32,21 +32,23 @@ site m = do
                       ]
             <|> dir "static" (serveDirectory "static")
 
-rootHandler :: MVar [(AnimMetadata,BlendingMode)] -> Snap ()
+rootHandler :: MVar [AnimMetadata] -> Snap ()
 rootHandler animmeta = do curranims <- liftIO $ readMVar animmeta
                           writeBS
                                 $ BSL.toStrict
                                 $ renderHtml
                                 $ rootPage curranims
 
-newAnims :: MVar (V.Vector (Animation,BlendingMode)) -> MVar [(AnimMetadata,BlendingMode)] -> Snap ()
+newAnims :: MVar (V.Vector (Animation,BlendingMode))
+         -> MVar [AnimMetadata]
+         -> Snap ()
 newAnims anims mAnimMeta = do req <- getRequest
                               let postParams = rqPostParams req
                               if Map.member "newanims" postParams
                                   then do let jsonblob = postParams Map.! "newanims"
-                                          case parseAnimMeta $ BS.unpack (jsonblob !! 0) of
-                                              Left err -> logError $ BS.pack err
-                                              Right newanims -> do liftIO $ modifyMVar_ mAnimMeta (\_ -> return newanims)
-                                                                   liftIO $ modifyMVar_ anims (\_ -> return $ V.fromList $ map metaToAnims newanims)
-                                          return ()
+                                              jsonanims = jsonblob !! 0
+                                              newanims = parseJSON $ BS.unpack jsonanims
+                                          liftIO $ modifyMVar_ mAnimMeta (\_ -> return newanims)
+                                          liftIO $ modifyMVar_ anims (\_ -> return $ V.fromList $ metaToAnims newanims)
+                                          liftIO $ putStrLn $ "New Anims: " ++ show newanims
                                   else modifyResponse $ setResponseCode 500
