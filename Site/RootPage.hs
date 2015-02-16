@@ -5,10 +5,8 @@ import Text.Blaze.Html
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import Control.Monad
-import Animations.LED
 
 import Site.Animations
-import Site.JSON
 
 rootPage :: Html
 rootPage =
@@ -86,7 +84,9 @@ animAddModal anims =
 
 renderAvailAnim :: Int -> AvailAnim -> Html
 renderAvailAnim num (AvailAnim nam opts) =
-        H.div ! A.id (toValue $ "avail-anim-" ++ show num) ! class_ "hidden" $
+        H.div ! A.id (toValue $ "avail-anim-" ++ show num)
+              ! class_ "hidden"
+              ! customAttribute "animtemplate" (toValue nam) $
             H.div ! class_ "panel panel-default" $
                 H.div ! class_ "panel-body" $ do
                     H.div ! class_ "row" $ do

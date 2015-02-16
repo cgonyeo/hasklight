@@ -37,6 +37,30 @@ animDown = function() {
         }
     });
 }
+refresh = function() {
+    $.get( "/getanims", function( data ) {
+        console.log(data);
+        for(i = 0; i < addedanims.length; i++) {
+            $("#" + addedanims[i]).remove();
+        }
+        addedanims = []
+        newanims = $.parseJSON(data);
+        for(i = 0; i < newanims.length; i++) {
+            var newanim = $("div[animtemplate=\"" + newanims[i]["name"] + "\"]")
+                .clone()
+                .attr("class","")
+                .attr("id","newanims-" + animcounter)
+                .attr("animtemplate","")
+                .insertBefore($('#btnrow'));
+            animcounter++;
+            addedanims.push(newanim.attr("id"))
+        }
+        morecolors();
+        removeAnimBtns();
+        animUp();
+        animDown();
+    });
+}
 $( document ).ready(function() {
     morecolors();
     removeAnimBtns();
@@ -48,13 +72,20 @@ $( document ).ready(function() {
         var tokens = $(this).attr("id").split('-');
         var num = tokens[tokens.length - 1];
         var anim = $("#avail-anim-" + num);
-        var newanim = anim.clone().attr("class","").attr("id","newanims-" + animcounter).insertBefore($('#btnrow'));
+        var newanim = anim.clone()
+                          .attr("class","")
+                          .attr("id","newanims-" + animcounter)
+                          .attr("animtemplate","")
+                          .insertBefore($('#btnrow'));
         animcounter++;
         morecolors();
         removeAnimBtns();
         animUp();
         animDown();
         addedanims.push(newanim.attr("id"))
+    });
+    $("#rfbtn").click(function() {
+        refresh();
     });
     $("#okbtn").click(function() {
         addedanims.sort(function(a,b) { return $("#" + a).index() - $("#" + b).index(); } );
