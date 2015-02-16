@@ -29,6 +29,7 @@ executable hasklight
                      , bytestring   == 0.10.*
                      , containers   == 0.5.*
                      , parsec       == 3.1.*
+                     , json         == 0.9
   ghc-options:         -Wall -O3
   extra-libraries:     wiringPi asound fftw3 rt pthread
   extra-lib-dirs:      /usr/local/lib

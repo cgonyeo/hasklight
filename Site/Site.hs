@@ -5,7 +5,6 @@ import qualified Data.Vector as V
 import Control.Concurrent.MVar
 import Control.Applicative
 import Animations.LED
-import Site.Animations
 import Site.RootPage
 import Site.JSON
 import Control.Monad.IO.Class
@@ -27,17 +26,13 @@ import qualified Data.Map.Lazy as Map
 site :: MVar (V.Vector (Animation,BlendingMode)) -> Snap ()
 site m = do
         animmeta <- liftIO $ newMVar []
-        ifTop (rootHandler animmeta)
+        ifTop rootHandler
             <|> route [ ("newanims", newAnims m animmeta)
                       ]
             <|> dir "static" (serveDirectory "static")
 
-rootHandler :: MVar [AnimMetadata] -> Snap ()
-rootHandler animmeta = do curranims <- liftIO $ readMVar animmeta
-                          writeBS
-                                $ BSL.toStrict
-                                $ renderHtml
-                                $ rootPage curranims
+rootHandler :: Snap ()
+rootHandler = writeBS $ BSL.toStrict $ renderHtml rootPage
 
 newAnims :: MVar (V.Vector (Animation,BlendingMode))
          -> MVar [AnimMetadata]

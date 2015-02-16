@@ -1,24 +1,16 @@
 import Control.Concurrent
-import Control.Concurrent.MVar
 import System.Clock
 import qualified Data.Vector as V
 import Snap.Http.Server
 
 import Audio.Audio
 import Animations.LED
-import Animations.SetAll
-import Animations.Strobe
-import Animations.CylonEye
-import Animations.Wave
-import Animations.Volume
-import Animations.Spectrum
-import Animations.Mirrors
 import TLC5947.TLC5947
 import Site.Site
 
 startAnimList :: IO (MVar (V.Vector (Animation,BlendingMode)))
 startAnimList = newMVar $
-           V.fromList [ (TimeOnly (cylonEye 0.4 10 (LED 500 0 0)),add)
+           V.fromList [ --(TimeOnly (cylonEye 0.4 10 (LED 500 0 0)),add)
                       --, (Audio $ audioMirror $ volume (LED 1000 0 0), add)
                       --, (FFT $ spectrum (LED 0 1000 2000),add)
                       ]
@@ -39,7 +31,7 @@ main :: IO ()
 main = do tlcInit
           audioInitialization
           al <- startAnimList
-          forkIO $ quickHttpServe $ site al
+          _ <- forkIO $ quickHttpServe $ site al
           runOdd al 0 0
 
 runOdd :: MVar (V.Vector (Animation,BlendingMode)) -> TimeDiff -> Int -> IO ()

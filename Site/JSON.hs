@@ -1,21 +1,15 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Site.JSON where
 
-import Text.Parsec as P
-import Text.Parsec.Char
-import Text.ParserCombinators.Parsec.Char
-import Control.Applicative
-import Numeric
-import Site.Animations
 import Animations.LED
 import Text.JSON.Generic
-import Animations.SetAll
-import Animations.Strobe
 import Animations.CylonEye
+import Animations.Mirrors
+import Animations.SetAll
+import Animations.Spectrum
+import Animations.Strobe
 import Animations.Wave
 import Animations.Volume
-import Animations.Spectrum
-import Animations.Mirrors
 
 data AnimMetadata = AnimMetadata { name         :: String
                                  , params       :: [AnimParam]
@@ -35,17 +29,54 @@ parseJSON = decodeJSON
 
 metaToAnims :: [AnimMetadata] -> [(Animation,BlendingMode)]
 metaToAnims = map convert
-        where convMode "Add"      = add
-              convMode "Subtract" = sub
-              convMode "Multiply" = mult
-              convert AnimMetadata { name = "Cylon Eye"
-                                   , params = [ AnimDouble speed
-                                              , AnimDouble size
-                                              , AnimLED r g b
-                                              ]
-                                   , blendingmode = mode
-                                   }
-                        = ( TimeOnly $ cylonEye speed size (LED r g b)
-                          , convMode mode
-                          )
-              convert _ = (TimeOnly $ setAll (LED 0 0 0), add)
+
+convMode :: String -> BlendingMode
+convMode "Add"      = add
+convMode "Subtract" = sub
+convMode "Multiply" = mult
+convMode _          = add
+
+convert :: AnimMetadata -> (Animation,BlendingMode)
+convert AnimMetadata { name = "Cylon Eye"
+                     , params = [ AnimDouble speed
+                                , AnimDouble size
+                                , AnimLED r g b
+                                ]
+                     , blendingmode = mode
+                     }
+          = ( TimeOnly $ cylonEye speed size (LED r g b)
+            , convMode mode
+            )
+convert AnimMetadata { name = "Set All"
+                     , params = [ AnimLED r g b ]
+                     , blendingmode = mode
+                     }
+          = ( TimeOnly $ setAll (LED r g b)
+            , convMode mode
+            )
+convert AnimMetadata { name = "Spectrum"
+                     , params = [ AnimLED r g b ]
+                     , blendingmode = mode
+                     }
+          = ( FFT $ spectrum (LED r g b)
+            , convMode mode
+            )
+convert AnimMetadata { name = "Wave"
+                     , params = [ AnimDouble speed
+                                , AnimDouble size
+                                , AnimDouble freq
+                                , AnimLED r g b
+                                ]
+                     , blendingmode = mode
+                     }
+          = ( TimeOnly $ wave speed size freq (LED r g b)
+            , convMode mode
+            )
+convert AnimMetadata { name = "Volume"
+                     , params = [ AnimLED r g b ]
+                     , blendingmode = mode
+                     }
+          = ( FFT $ volume (LED r g b)
+            , convMode mode
+            )
+convert _ = (TimeOnly $ setAll (LED 0 0 0), add)
