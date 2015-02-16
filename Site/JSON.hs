@@ -27,6 +27,9 @@ data AnimParam = AnimDouble Double
 parseJSON :: String -> [AnimMetadata]
 parseJSON = decodeJSON
 
+writeJSON :: [AnimMetadata] -> String
+writeJSON = encodeJSON
+
 metaToAnims :: [AnimMetadata] -> [(Animation,BlendingMode)]
 metaToAnims = map convert
 

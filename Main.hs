@@ -31,7 +31,8 @@ main :: IO ()
 main = do tlcInit
           audioInitialization
           al <- startAnimList
-          _ <- forkIO $ quickHttpServe $ site al
+          animmeta <- newMVar []
+          _ <- forkIO $ quickHttpServe $ site al animmeta
           runOdd al 0 0
 
 runOdd :: MVar (V.Vector (Animation,BlendingMode)) -> TimeDiff -> Int -> IO ()
@@ -52,8 +53,7 @@ runOdd animListM t' c = do
                                                     in (bl dis,(anim,bl))
                       ) animList
             disp = V.foldr' (\x a -> x a) emptyDisplay layers
-        --print $ V.toList $ dfgsdfg fftvals
-        --putStrLn "------"
+        --print $ V.toList $ V.map (\(LED r g b) -> r) disp
         updateDisp disp
         putMVar animListM animList'
         if t - t' >= 1
