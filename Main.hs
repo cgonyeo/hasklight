@@ -2,18 +2,34 @@ import Control.Concurrent
 import System.Clock
 import qualified Data.Vector as V
 import Snap.Http.Server
+import Snap.Core
+import Data.ConfigFile
+import System.Environment
+import Data.Either.Utils
+import qualified Data.ByteString as BS
 
 import Audio.Audio
 import Animations.LED
 import TLC5947.TLC5947
 import Site.Site
 
+getConfig :: FilePath -> IO (Config Snap a,String,FilePath)
+getConfig file = do cfg <- forceEither `fmap` readfile emptyCP file
+                    let host       = forceEither $ get cfg "DEFAULT" "host"
+                        port       = forceEither $ get cfg "DEFAULT" "port"
+                        accesslog  = forceEither $ get cfg "DEFAULT" "http_access_log" :: String
+                        errorlog   = forceEither $ get cfg "DEFAULT" "http_error_log" :: String
+                        presetsdir = forceEither $ get cfg "DEFAULT" "presets_dir"
+                        snapconf   = setHostname (BS.pack host)
+                                   $ setPort port
+                                   $ setAccessLog (ConfigFileLog accesslog)
+                                   $ setErrorLog (ConfigFileLog errorlog)
+                                   $ defaultConfig
+                    return (snapconf,show host,presetsdir)
+
 startAnimList :: IO (MVar (V.Vector (Animation,BlendingMode)))
 startAnimList = newMVar $
-           V.fromList [ --(TimeOnly (cylonEye 0.4 10 (LED 500 0 0)),add)
-                      --, (Audio $ audioMirror $ volume (LED 1000 0 0), add)
-                      --, (FFT $ spectrum (LED 0 1000 2000),add)
-                      ]
+           V.fromList []
 
 emptyDisplay :: Display
 emptyDisplay = V.replicate 64 (LED 0 0 0)
@@ -28,12 +44,17 @@ updateDisp disp = do tlcClearLeds
                      tlcUpdateLeds
 
 main :: IO ()
-main = do tlcInit
-          audioInitialization
-          al <- startAnimList
-          animmeta <- newMVar []
-          _ <- forkIO $ quickHttpServe $ site al animmeta
-          runOdd al 0 0
+main = do args <- getArgs
+          case args of
+              [file] -> do tlcInit
+                           audioInitialization
+                           al <- startAnimList
+                           animmeta <- newMVar []
+                           (snapconf,host,presetsdir) <- getConfig file
+                           _ <- forkIO $ httpServe snapconf $ site al animmeta host presetsdir
+                           --_ <- forkIO $ quickHttpServe $ site al animmeta host
+                           runOdd al 0 0
+              _ -> putStrLn "Usage: hasklight <config file>"
 
 runOdd :: MVar (V.Vector (Animation,BlendingMode)) -> TimeDiff -> Int -> IO ()
 runOdd animListM t' c = do

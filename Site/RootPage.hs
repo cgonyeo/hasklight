@@ -8,8 +8,8 @@ import Control.Monad
 
 import Site.Animations
 
-rootPage :: Html
-rootPage =
+rootPage :: String -> Html
+rootPage host =
     docTypeHtml $ do
         H.head $ do
             H.title "ODD"
@@ -33,7 +33,7 @@ rootPage =
                             li $ a ! href "#" $ "Load Preset"
                             li $ a ! href "#" $ "Manage Presets"
                         ul ! class_ "nav navbar-nav navbar-right" $ do
-                            li $ a ! href "" $ "172.16.10.153"
+                            --li $ p $ (toHtml host)
                             li $ a ! href "#" $ H.span ! class_ "glyphicon glyphicon-cog" $ ""
             H.div ! class_ "container" $ do
                 forM_ (zip [1..(length availAnims)] availAnims) (uncurry renderAvailAnim)
@@ -96,10 +96,10 @@ renderAvailAnim num (AvailAnim nam opts) =
                             select ! class_ "form-control anim-bl" $ do
                                 forM_ blendingOpts (\x -> option $ toHtml x)
                         H.div ! class_ "col-xs-2" $ do
-                            button ! class_ "btn btn-default anim-down" $ 
-                                H.span ! class_ "glyphicon glyphicon-menu-down" $ ""
                             button ! class_ "btn btn-default anim-up" $ 
                                 H.span ! class_ "glyphicon glyphicon-menu-up" $ ""
+                            button ! class_ "btn btn-default anim-down" $ 
+                                H.span ! class_ "glyphicon glyphicon-menu-down" $ ""
                             button ! class_ "btn btn-default del-anim" $ 
                                 H.span ! class_ "glyphicon glyphicon-remove" $ ""
                     hr
@@ -124,7 +124,8 @@ renderAvailAnim num (AvailAnim nam opts) =
                                          ColorOpt n -> do
                                              H.label $ toHtml n
                                              br
-                                             button ! class_ "btn btn-default colors coloropt" $ " "
+                                             button ! class_ "btn btn-default colors coloropt" 
+                                                    ! A.style "background:#ffffff" $ " "
                                          ColorList n -> do
                                              H.label $ toHtml n
                                          BoolOpt n -> do

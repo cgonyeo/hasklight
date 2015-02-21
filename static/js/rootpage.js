@@ -1,14 +1,35 @@
 addedanims = []
 animcounter = 0
 
+rgbsplit = function(rgb) {
+    return rgb.replace(/[^\d,]/g, '').split(',')
+}
+function rgb2hex(rgb) {
+    //generates the hex-digits for a colour.
+    function hex(x) {
+        hexDigits = new Array("0", "1", "2", "3", "4", "5", "6", "7", "8",
+"9", "A", "B", "C", "D", "E", "F");
+        return isNaN(x) ? "00" : hexDigits[(x - x % 16) / 16] + hexDigits[x
+% 16];
+    }
+
+    return "#" + hex(rgb[0]) + hex(rgb[1]) + hex(rgb[2]);
+}
+
+
 morecolors = function() {
-    $('.colors').colpick( { layout   : 'hex'
+    cols = $('.colors');
+    for(i = 0; i < cols.length; i++) {
+        rgbs = rgbsplit(cols[i].style.background);
+        color = rgb2hex([rgbs[0],rgbs[1],rgbs[2]]);
+        $(cols[i]).colpick( { layout   : 'hex'
                           , submit   : 0
-                          , color    : 'ffffff'
+                          , color    : color
                           , onChange : function(hsb,hex,rgb,elem,thing) {
                                           $(elem).css({'background':'#' + hex})
                                        }
-                          } );
+                          } ).colpickSetColor(color,false);
+    }
 }
 removeAnimBtns = function() {
     $(".del-anim").unbind("click");
@@ -38,8 +59,11 @@ animDown = function() {
     });
 }
 refresh = function() {
+    //This function is awful. Javascript is a god forsaken language, and the
+    //fact that most of the web runs on this piece of crap language keeps me
+    //up at night.
     $.get( "/getanims", function( data ) {
-        console.log(data);
+        console.log("Received: " + data);
         for(i = 0; i < addedanims.length; i++) {
             $("#" + addedanims[i]).remove();
         }
@@ -54,6 +78,24 @@ refresh = function() {
                 .insertBefore($('#btnrow'));
             animcounter++;
             addedanims.push(newanim.attr("id"))
+            
+            $(newanim.find(".anim-bl")).val(newanims[i]["blendingmode"]);
+            optcounts = { "double" : 0
+                        , "int"    : 0
+                        , "color"  : 0
+                        }
+            for(j = 0; j < newanims[i]["params"].length; j++) {
+                if (newanims[i]["params"][j]["AnimDouble"] != null) {
+                    $(newanim.find(".doubleopt")[optcounts["double"]++]).val(newanims[i]["params"][j]["AnimDouble"]);
+                }
+                if (newanims[i]["params"][j]["AnimInt"] != null) {
+                    $(newanim.find(".intopt")[optcounts["int"]++]).val(newanims[i]["params"][j]["AnimInt"]);
+                }
+                if (newanims[i]["params"][j]["AnimLED"] != null) {
+                    color = "rgb(" + newanims[i]["params"][j]["AnimLED"]["red"] + "," + newanims[i]["params"][j]["AnimLED"]["green"] + "," + newanims[i]["params"][j]["AnimLED"]["blue"] + ")";
+                    $(newanim.find(".coloropt")[optcounts["color"]++]).css({'background':color})
+                }
+            }
         }
         morecolors();
         removeAnimBtns();
@@ -62,10 +104,6 @@ refresh = function() {
     });
 }
 $( document ).ready(function() {
-    morecolors();
-    removeAnimBtns();
-    animUp();
-    animDown();
     $('.colors').css({'background':'#ffffff'});
 
     $(".anim-selected").click(function() {
@@ -105,10 +143,7 @@ $( document ).ready(function() {
                     );
                 }
                 if(p.is("button.coloropt")) {
-                    colobj = p[0].style
-                                 .background
-                                 .replace(/[^\d,]/g, '')
-                                 .split(',')
+                    colobj = rgbsplit(p[0].style.background)
                     params.push( { "AnimLED"  : { "red"   : parseInt(colobj[0])
                                                 , "green" : parseInt(colobj[1])
                                                 , "blue"  : parseInt(colobj[2])
@@ -123,7 +158,8 @@ $( document ).ready(function() {
                         }
             )
         }
-        console.log(JSON.stringify(anims));
+        console.log("Sending: " + JSON.stringify(anims));
         $.post("/newanims", { "newanims" : JSON.stringify(anims) } );
     });
+    refresh();
 })
