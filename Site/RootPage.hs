@@ -13,8 +13,10 @@ rootPage host presets =
     docTypeHtml $ do
         H.head $ do
             H.title "ODD"
-            link ! rel "stylesheet" ! href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"
-            link ! rel "stylesheet" ! href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css"
+            link ! rel "stylesheet"
+                 ! href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"
+            link ! rel "stylesheet"
+                 ! href "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css"
             link ! rel "stylesheet" ! href "/static/css/colpick.css"
             link ! rel "stylesheet" ! href "/static/css/rootpage.css"
             script ! src "http://code.jquery.com/jquery-2.1.3.min.js" $ ""
@@ -22,12 +24,27 @@ rootPage host presets =
             script ! src "/static/js/numbervalidation.js" $ ""
             script ! src "/static/js/colpick.js" $ ""
             script ! src "/static/js/rootpage.js" $ ""
+            meta ! name "viewport"
+                 ! content "width=device-width, initial-scale=1, maximum-scale=1"
         body $ do
-            nav ! class_ "navbar navbar-default" ! customAttribute "role" "navigation" $ do
+            nav ! class_ "navbar navbar-default"
+                ! customAttribute "role" "navigation"
+                $ do
                 H.div ! class_ "container-fluid" $ do
                     H.div ! class_ "navbar-header" $ do
+                        button ! type_ "button"
+                               ! class_ "navbar-toggle collapsed"
+                               ! customAttribute "data-toggle" "collapse"
+                               ! customAttribute "data-target" "#navbar-body"
+                               $ do
+                            H.span ! class_ "sr-only" $ "Toggle navigation"
+                            H.span ! class_ "glyphicon glyphicon-menu-hamburger"
+                                   ! customAttribute "aria-hidden" "true"
+                                   $ ""
                         a ! class_ "navbar-brand" ! href "/" $ "ODD"
-                    H.div ! class_ "collapse navbar-collapse" $ do
+                    H.div ! class_ "collapse navbar-collapse" 
+                          ! A.id "navbar-body"
+                          $ do
                         ul ! class_ "nav navbar-nav" $ do
                             li $ a ! href "#"
                                    ! customAttribute "data-toggle" "modal"
@@ -82,6 +99,7 @@ rootPage host presets =
                                           ! A.id "svfield"
                                           ! customAttribute "placeholder" "Name"
                                     button ! class_ "btn btn-default" 
+                                           ! customAttribute "data-dismiss" "modal"
                                            ! A.id "svbtn"
                                            $ "Save"
 
