@@ -59,49 +59,95 @@ animDown = function() {
     });
 }
 refresh = function() {
+    $.get( "/getanims", function( data ) {
+        console.log("Received: " + data);
+        newanims = $.parseJSON(data);
+        loadanims(newanims);
+    });
+}
+loadpreset = function(preset) {
+    $.get( "/getpreset/" + preset, function(data) {
+        console.log("Loading preset " + preset + ": " + data);
+        newanims = $.parseJSON(data);
+        loadanims(newanims);
+    });
+}
+loadanims = function(newanims) {
     //This function is awful. Javascript is a god forsaken language, and the
     //fact that most of the web runs on this piece of crap language keeps me
     //up at night.
-    $.get( "/getanims", function( data ) {
-        console.log("Received: " + data);
-        for(i = 0; i < addedanims.length; i++) {
-            $("#" + addedanims[i]).remove();
-        }
-        addedanims = []
-        newanims = $.parseJSON(data);
-        for(i = 0; i < newanims.length; i++) {
-            var newanim = $("div[animtemplate=\"" + newanims[i]["name"] + "\"]")
-                .clone()
-                .attr("class","")
-                .attr("id","newanims-" + animcounter)
-                .attr("animtemplate","")
-                .insertBefore($('#btnrow'));
-            animcounter++;
-            addedanims.push(newanim.attr("id"))
-            
-            $(newanim.find(".anim-bl")).val(newanims[i]["blendingmode"]);
-            optcounts = { "double" : 0
-                        , "int"    : 0
-                        , "color"  : 0
-                        }
-            for(j = 0; j < newanims[i]["params"].length; j++) {
-                if (newanims[i]["params"][j]["AnimDouble"] != null) {
-                    $(newanim.find(".doubleopt")[optcounts["double"]++]).val(newanims[i]["params"][j]["AnimDouble"]);
-                }
-                if (newanims[i]["params"][j]["AnimInt"] != null) {
-                    $(newanim.find(".intopt")[optcounts["int"]++]).val(newanims[i]["params"][j]["AnimInt"]);
-                }
-                if (newanims[i]["params"][j]["AnimLED"] != null) {
-                    color = "rgb(" + newanims[i]["params"][j]["AnimLED"]["red"] + "," + newanims[i]["params"][j]["AnimLED"]["green"] + "," + newanims[i]["params"][j]["AnimLED"]["blue"] + ")";
-                    $(newanim.find(".coloropt")[optcounts["color"]++]).css({'background':color})
-                }
+    for(i = 0; i < addedanims.length; i++) {
+        $("#" + addedanims[i]).remove();
+    }
+    addedanims = []
+    for(i = 0; i < newanims.length; i++) {
+        var newanim = $("div[animtemplate=\"" + newanims[i]["name"] + "\"]")
+            .clone()
+            .attr("class","")
+            .attr("id","newanims-" + animcounter)
+            .attr("animtemplate","")
+            .insertBefore($('#btnrow'));
+        animcounter++;
+        addedanims.push(newanim.attr("id"))
+        
+        $(newanim.find(".anim-bl")).val(newanims[i]["blendingmode"]);
+        optcounts = { "double" : 0
+                    , "int"    : 0
+                    , "color"  : 0
+                    }
+        for(j = 0; j < newanims[i]["params"].length; j++) {
+            if (newanims[i]["params"][j]["AnimDouble"] != null) {
+                $(newanim.find(".doubleopt")[optcounts["double"]++]).val(newanims[i]["params"][j]["AnimDouble"]);
+            }
+            if (newanims[i]["params"][j]["AnimInt"] != null) {
+                $(newanim.find(".intopt")[optcounts["int"]++]).val(newanims[i]["params"][j]["AnimInt"]);
+            }
+            if (newanims[i]["params"][j]["AnimLED"] != null) {
+                color = "rgb(" + newanims[i]["params"][j]["AnimLED"]["red"] + "," + newanims[i]["params"][j]["AnimLED"]["green"] + "," + newanims[i]["params"][j]["AnimLED"]["blue"] + ")";
+                $(newanim.find(".coloropt")[optcounts["color"]++]).css({'background':color})
             }
         }
-        morecolors();
-        removeAnimBtns();
-        animUp();
-        animDown();
-    });
+    }
+    morecolors();
+    removeAnimBtns();
+    animUp();
+    animDown();
+}
+
+getconfig = function() {
+    addedanims.sort(function(a,b) { return $("#" + a).index() - $("#" + b).index(); } );
+    anims = [];
+    for(i = 0; i < addedanims.length; i++) {
+        a = $("#" + addedanims[i]);
+        params = [];
+        ps = a.find("input.doubleopt, input.intopt, button.coloropt");
+        for(j = 0; j < ps.length; j++) {
+            p = $(ps[j]);
+            if(p.is("input.doubleopt")) {
+                params.push( { "AnimDouble"  : parseFloat(p.val()) }
+                );
+            }
+            if(p.is("input.intopt")) {
+                params.push( { "AnimInt"  : parseInt(p.val()) }
+                );
+            }
+            if(p.is("button.coloropt")) {
+                colobj = rgbsplit(p[0].style.background)
+                params.push( { "AnimLED"  : { "red"   : parseInt(colobj[0])
+                                            , "green" : parseInt(colobj[1])
+                                            , "blue"  : parseInt(colobj[2])
+                                            }
+                             }
+                );
+            }
+        }
+        anims.push( { "name" : a.find("h3.anim-name")[0].innerHTML
+                    , "params" : params
+                    , "blendingmode" : $(a.find(".anim-bl")[0]).val()
+                    }
+        )
+    }
+    return anims;
 }
 $( document ).ready(function() {
     $('.colors').css({'background':'#ffffff'});
@@ -126,40 +172,16 @@ $( document ).ready(function() {
         refresh();
     });
     $("#okbtn").click(function() {
-        addedanims.sort(function(a,b) { return $("#" + a).index() - $("#" + b).index(); } );
-        anims = [];
-        for(i = 0; i < addedanims.length; i++) {
-            a = $("#" + addedanims[i]);
-            params = [];
-            ps = a.find("input.doubleopt, input.intopt, button.coloropt");
-            for(j = 0; j < ps.length; j++) {
-                p = $(ps[j]);
-                if(p.is("input.doubleopt")) {
-                    params.push( { "AnimDouble"  : parseFloat(p.val()) }
-                    );
-                }
-                if(p.is("input.intopt")) {
-                    params.push( { "AnimInt"  : parseInt(p.val()) }
-                    );
-                }
-                if(p.is("button.coloropt")) {
-                    colobj = rgbsplit(p[0].style.background)
-                    params.push( { "AnimLED"  : { "red"   : parseInt(colobj[0])
-                                                , "green" : parseInt(colobj[1])
-                                                , "blue"  : parseInt(colobj[2])
-                                                }
-                                 }
-                    );
-                }
-            }
-            anims.push( { "name" : a.find("h3.anim-name")[0].innerHTML
-                        , "params" : params
-                        , "blendingmode" : $(a.find(".anim-bl")[0]).val()
-                        }
-            )
-        }
+        anims = getconfig();
         console.log("Sending: " + JSON.stringify(anims));
         $.post("/newanims", { "newanims" : JSON.stringify(anims) } );
+    });
+    $("#svbtn").click(function() {
+        anims = getconfig();
+        console.log("Saving preset: " + JSON.stringify(anims));
+        $.post("/savepreset/" + $("#svfield").val(), { "animations"
+                                                     : JSON.stringify(anims)
+                                                     } );
     });
     refresh();
 })

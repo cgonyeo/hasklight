@@ -8,8 +8,8 @@ import Control.Monad
 
 import Site.Animations
 
-rootPage :: String -> Html
-rootPage host =
+rootPage :: String -> [String] -> Html
+rootPage host presets =
     docTypeHtml $ do
         H.head $ do
             H.title "ODD"
@@ -29,8 +29,24 @@ rootPage host =
                         a ! class_ "navbar-brand" ! href "/" $ "ODD"
                     H.div ! class_ "collapse navbar-collapse" $ do
                         ul ! class_ "nav navbar-nav" $ do
-                            li $ a ! href "#" $ "Save Preset"
-                            li $ a ! href "#" $ "Load Preset"
+                            li $ a ! href "#"
+                                   ! customAttribute "data-toggle" "modal"
+                                   ! customAttribute "data-target" "#saveanim"
+                                   $ "Save Preset"
+                            li ! class_ "dropdown" $ do
+                                a ! href "#"
+                                  ! class_ "dropdown-toggle"
+                                  ! customAttribute "data-toggle" "dropdown"
+                                  ! customAttribute "role" "button"
+                                  ! customAttribute "area-expanded" "false"
+                                  $ "Load Preset"
+                                ul ! class_ "dropdown-menu"
+                                   ! customAttribute "role" "menu"
+                                   $ forM_ presets (\pr -> 
+                                        li $ do
+                                            a ! href "#"
+                                              ! onclick (toValue $ "loadpreset(\"" ++ pr ++ "\");")
+                                              $ (toHtml pr))
                             li $ a ! href "#" $ "Manage Presets"
                         ul ! class_ "nav navbar-nav navbar-right" $ do
                             --li $ p $ (toHtml host)
@@ -51,6 +67,34 @@ rootPage host =
                         button ! A.id "okbtn" ! class_ "btn btn-default" $
                             H.span ! class_ "glyphicon glyphicon-ok" $ ""
                 animAddModal availAnims
+                H.div ! A.id "saveanim"
+                      ! class_ "modal fade"
+                      ! customAttribute "role" "dialog"
+                      ! customAttribute "aria-hidden" "true"
+                      $
+                    H.div ! class_ "modal-dialog modal-sm" $
+                        H.div ! class_ "modal-content" $ do
+                            modalTop "Save a preset"
+                            H.div ! class_ "modal-body" $
+                                H.form ! class_ "form-inline" $ do
+                                    input ! type_ "text"
+                                          ! class_ "form-control"
+                                          ! A.id "svfield"
+                                          ! customAttribute "placeholder" "Name"
+                                    button ! class_ "btn btn-default" 
+                                           ! A.id "svbtn"
+                                           $ "Save"
+
+modalTop :: Html -> Html
+modalTop t = H.div ! class_ "modal-header" $ do
+                 button ! type_ "button"
+                        ! class_ "close"
+                        ! customAttribute "data-dismiss" "modal"
+                        ! customAttribute "aria-label" "Close"
+                        $
+                     H.span ! customAttribute "aria-hidden" "true"
+                            ! class_ "glyphicon glyphicon-remove" $ ""
+                 h4 ! class_ "modal-title" $ t
 
 animAddModal :: [AvailAnim] -> Html
 animAddModal anims = 
@@ -61,14 +105,7 @@ animAddModal anims =
               $
             H.div ! class_ "modal-dialog modal-sm" $
                 H.div ! class_ "modal-content" $ do
-                    H.div ! class_ "modal-header" $ do
-                        button ! type_ "button"
-                               ! class_ "close"
-                               ! customAttribute "data-dismiss" "modal"
-                               ! customAttribute "aria-label" "Close"
-                               $
-                            H.span ! customAttribute "aria-hidden" "true" ! class_ "glyphicon glyphicon-remove" $ ""
-                        h4 ! class_ "modal-title" $ "Select an animation..."
+                    modalTop "Select an animation..."
                     H.div ! class_ "modal-body" $
                         table ! class_ "table" $ 
                             forM_ (zip [1..(length anims)] anims)

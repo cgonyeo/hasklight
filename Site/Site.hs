@@ -25,7 +25,7 @@ site :: MVar (V.Vector (Animation,BlendingMode))
      -> FilePath
      -> Snap ()
 site m animmeta host presetsdir = do
-        ifTop (rootHandler host)
+        ifTop (rootHandler host presetsdir)
             <|> route [ ("newanims", newAnims m animmeta)
                       , ("getanims", getAnims animmeta)
                       , ("getpresets", getPresets presetsdir)
@@ -34,8 +34,14 @@ site m animmeta host presetsdir = do
                       ]
             <|> dir "static" (serveDirectory "static")
 
-rootHandler :: String -> Snap ()
-rootHandler host = writeBS $ BSL.toStrict $ renderHtml (rootPage host)
+lookAtPresets :: String -> IO [String]
+lookAtPresets presetsdir = filter (\x -> x /= "." && x /= "..")
+                               `fmap` getDirectoryContents presetsdir
+
+rootHandler :: String -> String -> Snap ()
+rootHandler host presetsdir = do
+    presets <- liftIO $ lookAtPresets presetsdir
+    writeBS $ BSL.toStrict $ renderHtml (rootPage host presets)
 
 newAnims :: MVar (V.Vector (Animation,BlendingMode))
          -> MVar [AnimMetadata]
@@ -61,9 +67,8 @@ getAnims animmeta = do
 
 getPresets :: FilePath -> Snap ()
 getPresets presetsdir = do
-    presets <- liftIO $ getDirectoryContents presetsdir
-    let presets' = filter (\x -> x /= "." && x /= "..") presets
-    writeBS $ BS.pack $ encode presets'
+    presets <- liftIO $ lookAtPresets presetsdir
+    writeBS $ BS.pack $ encode presets
 
 savePreset :: FilePath -> Snap ()
 savePreset presetsdir = do
