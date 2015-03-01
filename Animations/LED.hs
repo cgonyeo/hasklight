@@ -34,8 +34,8 @@ sub :: Display -> Display -> Display
 sub = V.zipWith (\(LED r b g) (LED r' b' g') -> LED (f r r') (f b b') (f g g'))
     where f a b = ledBounds $ b - a
 
-mult :: Display -> Display -> Display
-mult = V.zipWith (\(LED r b g) (LED r' b' g') -> LED (f r r') (f b b') (f g g'))
+mask :: Display -> Display -> Display
+mask = V.zipWith (\(LED r b g) (LED r' b' g') -> LED (f r r') (f b b') (f g g'))
     where f a b = ledBounds
                 $ floor
                 $ (fromIntegral b :: Double) * (fromIntegral a) / 4096

@@ -1,12 +1,6 @@
 module Site.Animations where
 
 import Animations.LED
-import Animations.CylonEye
-import Animations.SetAll
-import Animations.Spectrum
-import Animations.Volume
-import Animations.Strobe
-import Animations.Wave
 
 data AvailAnim = AvailAnim { animName :: String
                            , animOpts :: [AnimOpt]
@@ -22,7 +16,7 @@ data AnimOpt = DoubleOpt String Double Double
 blendingOpts :: [String]
 blendingOpts = [ "Add"
                , "Subtract"
-               , "Multiply"
+               , "Mask"
                ]
 
 availAnims :: [AvailAnim]

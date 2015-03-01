@@ -36,7 +36,7 @@ metaToAnims = map convert
 convMode :: String -> BlendingMode
 convMode "Add"      = add
 convMode "Subtract" = sub
-convMode "Multiply" = mult
+convMode "Mask"     = mask
 convMode _          = add
 
 convert :: AnimMetadata -> (Animation,BlendingMode)
