@@ -1,8 +1,6 @@
 module Animations.LED where
 
 import qualified Data.Vector as V
-import Control.Applicative
-import Control.Monad
 
 data LED = LED { red   :: Int
                , blue  :: Int
@@ -38,13 +36,13 @@ mask :: Display -> Display -> Display
 mask = V.zipWith (\(LED r b g) (LED r' b' g') -> LED (f r r') (f b b') (f g g'))
     where f a b = ledBounds
                 $ floor
-                $ (fromIntegral b :: Double) * (fromIntegral a) / 4096
+                $ (fromIntegral b :: Double) * (fromIntegral a) / 4095
 
 --Scales an Integer value by a given amount, and keeps it within a range of
 --valid LED values (a 12 bit positive integer).
 scaleInt :: Int -> Double -> Int
 scaleInt x y
-    | x' < 0    = x
+    | x' < 0    = 0
     | x' > 4095 = 4095
     | otherwise = x'
     where x' = (truncate $ (fromIntegral x) * y)

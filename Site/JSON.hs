@@ -39,6 +39,11 @@ convMode "Subtract" = sub
 convMode "Mask"     = mask
 convMode _          = add
 
+convColor :: LED -> LED
+convColor (LED r g b) = (LED (f r) (f g) (f b))
+    where f :: Int -> Int
+          f x = floor $ (fromIntegral x :: Double) / 255 * 4095
+
 convert :: AnimMetadata -> (Animation,BlendingMode)
 convert AnimMetadata { name = "Cylon Eye"
                      , params = [ AnimDouble speed
@@ -47,21 +52,21 @@ convert AnimMetadata { name = "Cylon Eye"
                                 ]
                      , blendingmode = mode
                      }
-          = ( TimeOnly $ cylonEye speed size (LED r g b)
+          = ( TimeOnly $ cylonEye speed size (convColor $ LED r g b)
             , convMode mode
             )
 convert AnimMetadata { name = "Set All"
                      , params = [ AnimLED r g b ]
                      , blendingmode = mode
                      }
-          = ( TimeOnly $ setAll (LED r g b)
+          = ( TimeOnly $ setAll (convColor $ LED r g b)
             , convMode mode
             )
 convert AnimMetadata { name = "Spectrum"
                      , params = [ AnimLED r g b ]
                      , blendingmode = mode
                      }
-          = ( FFT $ spectrum (LED r g b)
+          = ( FFT $ spectrum (convColor $ LED r g b)
             , convMode mode
             )
 convert AnimMetadata { name = "Wave"
@@ -72,7 +77,7 @@ convert AnimMetadata { name = "Wave"
                                 ]
                      , blendingmode = mode
                      }
-          = ( TimeOnly $ wave speed size freq (LED r g b)
+          = ( TimeOnly $ wave speed size freq (convColor $ LED r g b)
             , convMode mode
             )
 convert AnimMetadata { name = "Volume"
