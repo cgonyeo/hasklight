@@ -1,15 +1,19 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Site.JSON where
 
+import System.Clock
 import Animations.LED
 import Text.JSON.Generic
 import Animations.CylonEye
 import Animations.Mirrors
+import Animations.Ripple
 import Animations.SetAll
 import Animations.Spectrum
 import Animations.Strobe
 import Animations.Wave
 import Animations.Volume
+
+import qualified Data.Vector as V
 
 data AnimMetadata = AnimMetadata { name         :: String
                                  , params       :: [AnimParam]
@@ -30,9 +34,6 @@ parseJSON = decodeJSON
 writeJSON :: [AnimMetadata] -> String
 writeJSON = encodeJSON
 
-metaToAnims :: [AnimMetadata] -> [(Animation,BlendingMode)]
-metaToAnims = map convert
-
 convMode :: String -> BlendingMode
 convMode "Add"      = add
 convMode "Subtract" = sub
@@ -44,7 +45,7 @@ convColor (LED r g b) = (LED (f r) (f g) (f b))
     where f :: Int -> Int
           f x = floor $ (fromIntegral x :: Double) / 255 * 4095
 
-convert :: AnimMetadata -> (Animation,BlendingMode)
+convert :: AnimMetadata -> IO (Animation,BlendingMode)
 convert AnimMetadata { name = "Cylon Eye"
                      , params = [ AnimDouble speed
                                 , AnimDouble size
@@ -52,23 +53,23 @@ convert AnimMetadata { name = "Cylon Eye"
                                 ]
                      , blendingmode = mode
                      }
-          = ( TimeOnly $ cylonEye speed size (convColor $ LED r g b)
-            , convMode mode
-            )
+          = return ( TimeOnly $ cylonEye speed size (convColor $ LED r g b)
+                   , convMode mode
+                   )
 convert AnimMetadata { name = "Set All"
                      , params = [ AnimLED r g b ]
                      , blendingmode = mode
                      }
-          = ( TimeOnly $ setAll (convColor $ LED r g b)
-            , convMode mode
-            )
+          = return ( TimeOnly $ setAll (convColor $ LED r g b)
+                   , convMode mode
+                   )
 convert AnimMetadata { name = "Spectrum"
                      , params = [ AnimLED r g b ]
                      , blendingmode = mode
                      }
-          = ( FFT $ spectrum (convColor $ LED r g b)
-            , convMode mode
-            )
+          = return ( FFT $ spectrum (convColor $ LED r g b)
+                   , convMode mode
+                   )
 convert AnimMetadata { name = "Wave"
                      , params = [ AnimDouble speed
                                 , AnimDouble size
@@ -77,14 +78,26 @@ convert AnimMetadata { name = "Wave"
                                 ]
                      , blendingmode = mode
                      }
-          = ( TimeOnly $ wave speed size freq (convColor $ LED r g b)
-            , convMode mode
-            )
+          = return ( TimeOnly $ wave speed size freq (convColor $ LED r g b)
+                   , convMode mode
+                   )
 convert AnimMetadata { name = "Volume"
                      , params = [ AnimLED r g b ]
                      , blendingmode = mode
                      }
-          = ( FFT $ volume (LED r g b)
-            , convMode mode
-            )
-convert _ = (TimeOnly $ setAll (LED 0 0 0), add)
+          = return ( FFT $ volume (LED r g b)
+                   , convMode mode
+                   )
+convert AnimMetadata { name = "Ripple"
+                     , params = [ AnimDouble size
+                                , AnimDouble freq
+                                , AnimLED r g b
+                                ]
+                     , blendingmode = mode
+                     }
+          = do (TimeSpec s ns) <- getTime Monotonic
+               let t = (fromIntegral s) + ((fromIntegral ns) / 10^(9 :: Int))
+               return ( TimeOnly $ ripple size freq (V.fromList [((t + 5),32.1)]) (convColor $ LED r g b)
+                   , convMode mode
+                   )
+convert _ = return (TimeOnly $ setAll (LED 0 0 0), add)

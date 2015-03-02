@@ -76,13 +76,17 @@ rootPage host presets =
                                ! class_ "btn btn-default"
                                ! customAttribute "data-toggle" "modal"
                                ! customAttribute "data-target" "#animadd"
-                               $
+                               $ do
+                            p "Add"
                             H.span ! class_ "glyphicon glyphicon-plus" $ ""
                     H.div ! class_ "col-xs-offset-3 col-xs-2" $ do
-                        button ! A.id "rfbtn" ! class_ "btn btn-default" $
+                        button ! A.id "rfbtn" ! class_ "btn btn-default" $ do
+                            p "Refresh"
                             H.span ! class_ "glyphicon glyphicon-refresh" $ ""
-                        button ! A.id "okbtn" ! class_ "btn btn-default" $
+                        button ! A.id "okbtn" ! class_ "btn btn-default" $ do
+                            p "Apply"
                             H.span ! class_ "glyphicon glyphicon-ok" $ ""
+                hr ! A.id "btnsep"
                 animAddModal availAnims
                 H.div ! A.id "saveanim"
                       ! class_ "modal fade"
@@ -157,28 +161,25 @@ renderAvailAnim num (AvailAnim nam opts) =
                                 H.span ! class_ "glyphicon glyphicon-menu-down" $ ""
                             button ! class_ "btn btn-default del-anim" $ 
                                 H.span ! class_ "glyphicon glyphicon-remove" $ ""
-                    hr
                     H.div ! A.id "anims-container" ! class_ "row" $ 
                         forM_ opts
-                            (\opt -> H.div ! class_ "col-md-4" $ 
+                            (\opt -> H.div ! class_ "col-md-4" $ do
+                                 H.div ! class_ "form-group form-inline" $ do
                                      case opt of
                                          DoubleOpt n l h -> do
                                              H.label $ toHtml n
-                                             br
                                              input ! type_ "number"
                                                    ! class_ "num-doub form-control doubleopt"
                                                    ! onchange (toValue ("handlechange(this, " ++ show l ++ "," ++ show h ++ ",true);"))
                                                    ! value (toValue $ (l + h) / 2)
                                          IntOpt n l h -> do
                                              H.label $ toHtml n
-                                             br
                                              input ! type_ "number"
                                                    ! class_ "num-doub form-control intopt"
                                                    ! onchange (toValue ("handlechange(this, " ++ show l ++ "," ++ show h ++ ",false);"))
                                                    ! value (toValue $ (l + h) `Prelude.div` 2)
                                          ColorOpt n -> do
                                              H.label $ toHtml n
-                                             br
                                              button ! class_ "btn btn-default colors coloropt" 
                                                     ! A.style "background:#ffffff" $ " "
                                          ColorList n -> do

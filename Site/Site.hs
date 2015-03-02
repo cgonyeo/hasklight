@@ -55,7 +55,7 @@ newAnims anims animmeta = do
                     newanims = decodeJSON $ BS.unpack jsonanims
                 liftIO $ modifyMVar_ animmeta (\_ -> return newanims)
                 liftIO $ modifyMVar_ anims
-                            (\_ -> return $ V.fromList $ metaToAnims newanims)
+                            (\_ -> V.fromList `fmap` mapM convert newanims)
                 liftIO $ putStrLn $ "New Anims: " ++ show newanims
         else modifyResponse $ setResponseCode 500
 

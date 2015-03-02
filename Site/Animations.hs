@@ -24,7 +24,11 @@ availAnims = [ AvailAnim "Cylon Eye" [ DoubleOpt "Speed" 0.01 10
                                      , DoubleOpt "Size "0.5 64
                                      , ColorOpt "Color"
                                      ]
-             , AvailAnim "Mirror"    [ AnimOpt "Animation" ]
+             --, AvailAnim "Mirror"    [ AnimOpt "Animation" ]
+             , AvailAnim "Ripple"    [ DoubleOpt "Wave Size" 0 100000
+                                     , DoubleOpt "Frequency" 0 100000
+                                     , ColorOpt "Color"
+                                     ]
              , AvailAnim "Set All"   [ ColorOpt "Color" ]
              , AvailAnim "Spectrum"  [ ColorOpt "Color" ]
              , AvailAnim "Volume"    [ ColorOpt "Color" ]

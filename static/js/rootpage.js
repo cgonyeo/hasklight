@@ -80,13 +80,13 @@ loadanims = function(newanims) {
         $("#" + addedanims[i]).remove();
     }
     addedanims = []
-    for(i = 0; i < newanims.length; i++) {
+    for(i = newanims.length - 1; i >= 0; i--) {
         var newanim = $("div[animtemplate=\"" + newanims[i]["name"] + "\"]")
             .clone()
             .attr("class","")
             .attr("id","newanims-" + animcounter)
             .attr("animtemplate","")
-            .insertBefore($('#btnrow'));
+            .insertAfter($('#btnsep'));
         animcounter++;
         addedanims.push(newanim.attr("id"))
         
@@ -160,7 +160,7 @@ $( document ).ready(function() {
                           .attr("class","")
                           .attr("id","newanims-" + animcounter)
                           .attr("animtemplate","")
-                          .insertBefore($('#btnrow'));
+                          .insertAfter($('#btnsep'));
         animcounter++;
         morecolors();
         removeAnimBtns();
