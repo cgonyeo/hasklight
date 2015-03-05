@@ -2,6 +2,7 @@
 module Site.JSON where
 
 import System.Clock
+import System.Random
 import Animations.LED
 import Text.JSON.Generic
 import Animations.CylonEye
@@ -97,7 +98,8 @@ convert AnimMetadata { name = "Ripple"
                      }
           = do (TimeSpec s ns) <- getTime Monotonic
                let t = (fromIntegral s) + ((fromIntegral ns) / 10^(9 :: Int))
-               return ( TimeOnly $ ripple size freq (V.fromList [((t + 5),32.1)]) (convColor $ LED r g b)
+               rnd <- getStdGen
+               return ( TimeOnly $ ripple size freq (V.fromList [(0,0)]) (convColor $ LED r g b) rnd
                    , convMode mode
                    )
 convert _ = return (TimeOnly $ setAll (LED 0 0 0), add)
