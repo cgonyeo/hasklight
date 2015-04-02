@@ -26,11 +26,13 @@ site :: MVar (V.Vector (Animation,BlendingMode))
      -> Snap ()
 site m animmeta host presetsdir = do
         ifTop (rootHandler host presetsdir)
-            <|> route [ ("newanims", newAnims m animmeta)
-                      , ("getanims", getAnims animmeta)
+            <|> route [ ("set", setAnims m animmeta)
+                      , ("get", getAnims animmeta)
+                      , ("list", listAnims)
                       , ("getpresets", getPresets presetsdir)
-                      , ("savepreset/:name", savePreset presetsdir)
                       , ("getpreset/:name", getPreset presetsdir)
+                      , ("setpreset/:name", setPreset presetsdir)
+                      , ("delpreset/:name", delPreset presetsdir)
                       ]
             <|> dir "static" (serveDirectory "static")
 
@@ -43,10 +45,11 @@ rootHandler host presetsdir = do
     presets <- liftIO $ lookAtPresets presetsdir
     writeBS $ BSL.toStrict $ renderHtml (rootPage host presets)
 
-newAnims :: MVar (V.Vector (Animation,BlendingMode))
+--Sets the active animations
+setAnims :: MVar (V.Vector (Animation,BlendingMode))
          -> MVar [AnimMetadata]
          -> Snap ()
-newAnims anims animmeta = do
+setAnims anims animmeta = do
     req <- getRequest
     let postParams = rqPostParams req
     if Map.member "newanims" postParams
@@ -59,19 +62,25 @@ newAnims anims animmeta = do
                 liftIO $ putStrLn $ "New Anims: " ++ show newanims
         else modifyResponse $ setResponseCode 500
 
-
+--Get the currently active animations
 getAnims :: MVar [AnimMetadata] -> Snap ()
 getAnims animmeta = do
     anims <- liftIO $ readMVar animmeta
     writeBS $ BS.pack $ encodeJSON anims
 
+--Lists the available animations
+listAnims :: Snap ()
+listAnims = writeBS $ BS.pack $ encodeJSON availAnims
+
+--Lists the available presets
 getPresets :: FilePath -> Snap ()
 getPresets presetsdir = do
     presets <- liftIO $ lookAtPresets presetsdir
     writeBS $ BS.pack $ encode presets
 
-savePreset :: FilePath -> Snap ()
-savePreset presetsdir = do
+--Sets a preset to the given JSON
+setPreset :: FilePath -> Snap ()
+setPreset presetsdir = do
     mname <- getParam "name"
     postParams <- rqPostParams `fmap` getRequest
     case mname of
@@ -83,10 +92,20 @@ savePreset presetsdir = do
                      else writeBS "Missing post parameter: animations"
         Nothing   -> writeBS "You need to specify a name. /savepreset/:name"
 
+--Gets the JSON for a given preset
 getPreset :: FilePath -> Snap ()
 getPreset presetsdir = do
     mname <- getParam "name"
     case mname of
         Just n -> do p <- liftIO $ BS.readFile (joinPath [presetsdir,BS.unpack n])
                      writeBS p
+        Nothing   -> writeBS "You need to specify a name. /getpreset/:name"
+
+--Deletes a given preset
+delPreset :: FilePath -> Snap ()
+delPreset presetsdir = do
+    mname <- getParam "name"
+    case mname of
+        Just n -> do liftIO $ removeFile (joinPath [presetsdir,BS.unpack n)
+                     writeBS "Success!"
         Nothing   -> writeBS "You need to specify a name. /getpreset/:name"
