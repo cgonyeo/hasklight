@@ -1,17 +1,26 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 module Site.Animations where
 
 import Animations.LED
+import Text.JSON.Generic
 
 data AvailAnim = AvailAnim { animName :: String
                            , animOpts :: [AnimOpt]
-                           }
+                           } deriving(Show, Data, Typeable)
 
-data AnimOpt = DoubleOpt String Double Double
-             | IntOpt String Int Int
-             | ColorOpt String
-             | ColorList String
-             | BoolOpt String
-             | AnimOpt String
+data AnimOpt = DoubleOpt { dname :: String
+                         , dmin  :: Double
+                         , dmax  :: Double
+                         }
+             | IntOpt { iname :: String
+                      , imin  :: Int
+                      , imax  :: Int
+                      }
+             | ColorOpt { cname :: String }
+             | ColorList { clname :: String }
+             | BoolOpt { bname :: String }
+             | AnimOpt { aname :: String }
+             deriving(Show, Data, Typeable)
 
 blendingOpts :: [String]
 blendingOpts = [ "Add"
