@@ -5,6 +5,7 @@ import qualified Data.Vector as V
 import Control.Concurrent.MVar
 import Control.Applicative
 import Animations.LED
+import Site.Animations
 import Site.RootPage
 import Site.JSON
 import Text.JSON
@@ -90,7 +91,7 @@ setPreset presetsdir = do
                              liftIO $ BS.writeFile (joinPath [presetsdir,BS.unpack n]) p
                              writeBS "Success!"
                      else writeBS "Missing post parameter: animations"
-        Nothing   -> writeBS "You need to specify a name. /savepreset/:name"
+        Nothing   -> writeBS "You need to specify a name. /setpreset/:name"
 
 --Gets the JSON for a given preset
 getPreset :: FilePath -> Snap ()
@@ -106,6 +107,6 @@ delPreset :: FilePath -> Snap ()
 delPreset presetsdir = do
     mname <- getParam "name"
     case mname of
-        Just n -> do liftIO $ removeFile (joinPath [presetsdir,BS.unpack n)
+        Just n -> do liftIO $ removeFile (joinPath [presetsdir,BS.unpack n])
                      writeBS "Success!"
-        Nothing   -> writeBS "You need to specify a name. /getpreset/:name"
+        Nothing   -> writeBS "You need to specify a name. /delpreset/:name"
