@@ -1,8 +1,8 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Site.Animations where
+module Hasklight.AnimParams where
 
-import Animations.LED
 import Text.JSON.Generic
+import Hasklight.LED
 
 data AvailAnim = AvailAnim { animName :: String
                            , animOpts :: [AnimOpt]

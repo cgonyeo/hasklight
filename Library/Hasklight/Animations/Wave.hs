@@ -1,7 +1,7 @@
-module Animations.Wave where
+module Hasklight.Animations.Wave where
 
 import qualified Data.Vector as V
-import Animations.LED
+import Hasklight.LED
 
 wave :: Double -- speed
      -> Double -- size

@@ -1,5 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-module Audio.Audio where
+module Hasklight.Audio where
 
 import Foreign.C
 import Foreign.Ptr

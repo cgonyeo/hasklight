@@ -1,11 +1,14 @@
+module Main where
+
 import Control.Concurrent
 import System.Clock
-import qualified Data.Vector as V
 import Snap.Http.Server
 import Snap.Core
 import Data.ConfigFile
 import System.Environment
 import Data.Either.Utils
+
+import qualified Data.Vector     as V
 import qualified Data.ByteString as BS
 
 import Audio.Audio

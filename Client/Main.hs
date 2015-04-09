@@ -6,14 +6,24 @@ import GHCJS.DOM                     ( runWebGUI
                                      )
 import GHCJS.DOM.Document            ( documentCreateElement
                                      , documentGetBody
+                                     , documentGetElementsByClassName
                                      , documentGetElementById
                                      )
 import GHCJS.DOM.Element             ( elementOnclick )
 import GHCJS.DOM.HTMLElement         ( htmlElementSetInnerHTML
                                      , htmlElementSetInnerText
+                                     , IsHTMLElement
                                      )
-import GHCJS.DOM.Node                ( nodeAppendChild )
+import GHCJS.DOM.Node                ( IsNode
+                                     , nodeAppendChild
+                                     , nodeGetParentNode
+                                     , nodeRemoveChild
+                                     )
+import GHCJS.DOM.NodeList            ( nodeListItem 
+                                     , nodeListGetLength
+                                     )
 import GHCJS.DOM.Types               ( castToHTMLAnchorElement
+                                     , castToHTMLButtonElement
                                      , castToHTMLDivElement
                                      , castToHTMLHRElement
                                      , castToHTMLTableElement
@@ -22,6 +32,7 @@ import GHCJS.DOM.Types               ( castToHTMLAnchorElement
                                      , GType
                                      , HTMLCanvasElement
                                      , HTMLDivElement
+                                     , Node
                                      )
 import Control.Applicative           ( (<$>) )
 import Control.Monad.IO.Class        ( liftIO )
@@ -32,7 +43,7 @@ import Data.Text.Lazy                ( Text
 import Text.Blaze.Html.Renderer.Text ( renderHtml )
 import Text.Hamlet                   ( shamlet )
 
-import Site.Animations
+import Hasklight.AnimParams
 
 
 main = do
@@ -49,8 +60,8 @@ main = do
 
 addAnimAction :: Document -> Int -> IO ()
 addAnimAction doc i = do
-        Just btnsep  <- fmap castToHTMLHRElement
-                             <$> documentGetElementById doc "btnsep"
+        Just animationsdiv  <- fmap castToHTMLDivElement
+                             <$> documentGetElementById doc "animationsdiv"
         Just anim <- fmap castToHTMLAnchorElement
                             <$> documentGetElementById doc ("avail-" ++ show i)
         elementOnclick anim . liftIO $ do
@@ -58,8 +69,29 @@ addAnimAction doc i = do
             Just newdiv <- fmap castToHTMLDivElement
                                     <$> documentCreateElement doc "div"
             htmlElementSetInnerHTML newdiv (unpack anim)
-            nodeAppendChild btnsep (Just newdiv)
+            nodeAppendChild animationsdiv (Just newdiv)
+            delAnimAction doc newdiv
             return ()
+        return ()
+
+delAnimAction :: IsHTMLElement self => Document -> self -> IO ()
+delAnimAction doc self = do
+        mbtns <- documentGetElementsByClassName doc "del-anim"
+        case mbtns of
+            Just btns -> do
+                l <- nodeListGetLength btns
+                mbtn <- nodeListItem btns (l-1)
+                case mbtn of
+                    Just btn ->
+                        do elementOnclick (castToHTMLButtonElement btn) . liftIO $ do
+                               mpar <- nodeGetParentNode self
+                               case mpar of
+                                   Just par -> do nodeRemoveChild par (Just self)
+                                                  return ()
+                                   Nothing -> putStrLn "Error getting self's parent for removal"
+                           return ()
+                    Nothing -> putStrLn "Error getting first item in .del-anim list"
+            Nothing -> putStrLn "Error fetching .del-anim buttons"
         return ()
 
 renderAnimList :: [AvailAnim] -> Text

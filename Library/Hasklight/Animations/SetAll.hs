@@ -1,7 +1,7 @@
-module Animations.SetAll where
+module Hasklight.Animations.SetAll where
 
 import qualified Data.Vector as V
-import Animations.LED
+import Hasklight.LED
 
 setAll :: Color
        -> DisplaySize

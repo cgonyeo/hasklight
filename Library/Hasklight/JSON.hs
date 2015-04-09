@@ -1,18 +1,11 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Site.JSON where
+module Hasklight.JSON where
 
 import System.Clock
 import System.Random
-import Animations.LED
 import Text.JSON.Generic
-import Animations.CylonEye
-import Animations.Mirrors
-import Animations.Ripple
-import Animations.SetAll
-import Animations.Spectrum
-import Animations.Strobe
-import Animations.Wave
-import Animations.Volume
+import Hasklight.LED
+import Hasklight.Animations
 
 import qualified Data.Vector as V
 

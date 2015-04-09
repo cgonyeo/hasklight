@@ -1,8 +1,8 @@
-module Animations.Volume where
+module Hasklight.Animations.Volume where
 
 import qualified Data.Vector as V
 import GHC.Float
-import Animations.LED
+import Hasklight.LED
 
 volume :: Color
        -> DisplaySize

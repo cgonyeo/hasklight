@@ -1,7 +1,7 @@
-module Animations.Strobe where
+module Hasklight.Animations.Strobe where
 
 import qualified Data.Vector as V
-import Animations.LED
+import Hasklight.LED
 
 strobe :: Double --Speed
        -> Color

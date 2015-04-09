@@ -1,24 +1,25 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Site.Site where
+module Hasklight.Site where
 
-import qualified Data.Vector as V
 import Control.Concurrent.MVar
 import Control.Applicative
 import Animations.LED
-import Site.Animations
-import Site.RootPage
-import Site.JSON
 import Text.JSON
 import Text.JSON.Generic
 import Control.Monad.IO.Class
 import Snap.Core
 import Text.Blaze.Html.Renderer.Utf8
 import Snap.Util.FileServe
-import qualified Data.ByteString.Lazy.Char8 as BSL
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.Map.Lazy as Map
 import System.Directory
 import System.FilePath.Posix
+
+import qualified Data.ByteString.Lazy.Char8 as BSL
+import qualified Data.ByteString.Char8      as BS
+import qualified Data.Map.Lazy              as Map
+import qualified Data.Vector                as V
+
+import Hasklight.AnimParams
+import Hasklight.JSON
 
 site :: MVar (V.Vector (Animation,BlendingMode))
      -> MVar [AnimMetadata]
@@ -26,25 +27,19 @@ site :: MVar (V.Vector (Animation,BlendingMode))
      -> FilePath
      -> Snap ()
 site m animmeta host presetsdir = do
-        ifTop (rootHandler host presetsdir)
-            <|> route [ ("set", setAnims m animmeta)
-                      , ("get", getAnims animmeta)
-                      , ("list", listAnims)
-                      , ("getpresets", getPresets presetsdir)
-                      , ("getpreset/:name", getPreset presetsdir)
-                      , ("setpreset/:name", setPreset presetsdir)
-                      , ("delpreset/:name", delPreset presetsdir)
-                      ]
-            <|> dir "static" (serveDirectory "static")
+        route [ ("set", setAnims m animmeta)
+              , ("get", getAnims animmeta)
+              , ("list", listAnims)
+              , ("getpresets", getPresets presetsdir)
+              , ("getpreset/:name", getPreset presetsdir)
+              , ("setpreset/:name", setPreset presetsdir)
+              , ("delpreset/:name", delPreset presetsdir)
+              ]
+          <|> dir "static" (serveDirectory "static")
 
 lookAtPresets :: String -> IO [String]
 lookAtPresets presetsdir = filter (\x -> x /= "." && x /= "..")
                                `fmap` getDirectoryContents presetsdir
-
-rootHandler :: String -> String -> Snap ()
-rootHandler host presetsdir = do
-    presets <- liftIO $ lookAtPresets presetsdir
-    writeBS $ BSL.toStrict $ renderHtml (rootPage host presets)
 
 --Sets the active animations
 setAnims :: MVar (V.Vector (Animation,BlendingMode))

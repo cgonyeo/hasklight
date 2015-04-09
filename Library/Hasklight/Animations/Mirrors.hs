@@ -1,7 +1,7 @@
-module Animations.Mirrors where
+module Hasklight.Animations.Mirrors where
 
 import qualified Data.Vector as V
-import Animations.LED
+import Hasklight.LED
 
 addMirror :: Animation -> Animation
 addMirror a = case a of

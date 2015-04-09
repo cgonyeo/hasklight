@@ -1,4 +1,4 @@
-module Animations.LED where
+module Hasklight.LED where
 
 import qualified Data.Vector as V
 

@@ -1,8 +1,8 @@
-module Animations.Ripple where
+module Hasklight.Animations.Ripple where
 
-import Animations.LED
 import qualified Data.Vector as V
 import System.Random
+import Hasklight.LED
 
 ripple :: Double -- wave size
        -> Double -- ripple frequency

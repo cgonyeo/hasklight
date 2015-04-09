@@ -1,7 +1,7 @@
-module Animations.CylonEye where
+module Hasklight.Animations.CylonEye where
 
-import Animations.LED
 import qualified Data.Vector as V
+import Hasklight.LED
 
 cylonEye :: Double -- speed
          -> Double -- size

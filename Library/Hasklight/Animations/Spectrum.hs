@@ -1,8 +1,8 @@
-module Animations.Spectrum where
+module Hasklight.Animations.Spectrum where
 
 import qualified Data.Vector as V
 import GHC.Float
-import Animations.LED
+import Hasklight.LED
 
 spectrum :: Color
          -> DisplaySize

@@ -1,5 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-module TLC5947.TLC5947 where
+module Hasklight.TLC5947 where
 
 import Foreign.C
 
