@@ -11,10 +11,10 @@ import Data.Either.Utils
 import qualified Data.Vector     as V
 import qualified Data.ByteString as BS
 
-import Audio.Audio
-import Animations.LED
-import TLC5947.TLC5947
-import Site.Site
+import Hasklight.Audio
+import Hasklight.LED
+import Hasklight.TLC5947
+import Hasklight.Site
 
 getConfig :: FilePath -> IO (Config Snap a,String,FilePath)
 getConfig file = do cfg <- forceEither `fmap` readfile emptyCP file
