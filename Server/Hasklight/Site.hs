@@ -3,7 +3,6 @@ module Hasklight.Site where
 
 import Control.Concurrent.MVar
 import Control.Applicative
-import Animations.LED
 import Text.JSON
 import Text.JSON.Generic
 import Control.Monad.IO.Class
@@ -12,6 +11,7 @@ import Text.Blaze.Html.Renderer.Utf8
 import Snap.Util.FileServe
 import System.Directory
 import System.FilePath.Posix
+import Hasklight.LED
 
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Char8      as BS

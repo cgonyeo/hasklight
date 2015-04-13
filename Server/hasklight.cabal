@@ -14,7 +14,6 @@ maintainer:          dgonyeo@csh.rit.edu
 -- category:            
 build-type:          Simple
 cabal-version:       >=1.8
-exposed-modules:     Site.Animations
 
 executable hasklight
   main-is:             Main.hs
@@ -40,5 +39,5 @@ executable hasklight
   ghc-options:         -Wall -O3
   extra-libraries:     wiringPi asound fftw3 rt pthread
   extra-lib-dirs:      /usr/local/lib
-  c-sources:           TLC5947/tlc5947.c Audio/audio.c
+  c-sources:           Hasklight/TLC5947/tlc5947.c Hasklight/Audio/audio.c
   cc-options:          -std=gnu99 -ggdb
