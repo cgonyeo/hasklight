@@ -12,8 +12,8 @@ import GHCJS.DOM.NodeList          ( NodeList )
 import GHCJS.DOM.NodeList          ( nodeListItem 
                                    , nodeListGetLength
                                    )
-import GHCJS.DOM.Types             ( Node
-                                   , Document
+import GHCJS.DOM.Types             ( Document
+                                   , Node
                                    )
 import Language.Javascript.JSaddle ( JSM
                                    , JSValueRef

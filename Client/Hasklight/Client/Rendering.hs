@@ -42,13 +42,13 @@ renderAnim (AvailAnim name opts) = renderHtml [shamlet|$newline always
                                 $case opt
                                     $of DoubleOpt n l h
                                         <label>#{n}
-                                        <input type="number" class="form-control doubleopt opt" value=#{(l + h) / 2}>
+                                        <input type="number" class="form-control opt" opttype="double" value=#{(l + h) / 2}>
                                     $of IntOpt n l h
                                         <label>#{n}
-                                        <input type="number" class="form-control intopt opt" value=#{div (l + h) 2}>
+                                        <input type="number" class="form-control opt" opttype="int" value=#{div (l + h) 2}>
                                     $of ColorOpt n
                                         <label>#{n}
-                                        <input type="text" class="form-control colopt opt" value="#ff0000">
+                                        <input type="text" class="form-control opt colopt" opttype="color" value="rgb(255, 0, 0)">
                                     $of ColorList n
                                         <label>#{n}
                                     $of BoolOpt n

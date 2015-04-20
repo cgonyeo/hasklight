@@ -27,9 +27,10 @@ executable hasklight-client
                       , ghcjs-dom >=0.1.1.0 && <0.2
                       , base -any
                       , vector == 0.10.*
-                      , transformers ==0.4.*
+                      , transformers >=0.4
                       , json ==0.9.*
                       , libhasklight -any
                       , jsaddle >=0.2 && <0.3
+                      , split >=0.2
   -- hs-source-dirs:      
   default-language:    Haskell2010

@@ -4,36 +4,51 @@ import GHCJS.DOM.Document          ( documentCreateElement
                                    , documentGetElementsByClassName
                                    , documentGetElementById
                                    )
-import GHCJS.DOM.Element           ( elementOnclick
+import GHCJS.DOM.Element           ( elementGetAttribute
                                    , elementGetClassList
+                                   , elementOnclick
                                    )
 import GHCJS.DOM.HTMLElement       ( htmlElementGetInnerText
                                    , htmlElementSetInnerHTML
                                    , IsHTMLElement
                                    )
+import GHCJS.DOM.HTMLInputElement  ( htmlInputElementGetValue )
+import GHCJS.DOM.HTMLSelectElement ( htmlSelectElementGetValue )
 import GHCJS.DOM.Node              ( nodeAppendChild
                                    , nodeGetParentNode
                                    , nodeRemoveChild
                                    )
-import GHCJS.DOM.NodeList          ( nodeListItem 
+import GHCJS.DOM.NodeList          ( NodeList
+                                   , nodeListItem 
                                    , nodeListGetLength
                                    )
 import GHCJS.DOM.Types             ( castToHTMLAnchorElement
                                    , castToHTMLButtonElement
                                    , castToHTMLDivElement
                                    , castToHTMLHeadingElement
+                                   , castToHTMLInputElement
+                                   , castToHTMLSelectElement
                                    , Document
                                    , HTMLButtonElement
+                                   , HTMLInputElement
+                                   , Node
                                    )
 import Control.Applicative         ( (<$>) )
 import Control.Monad               ( filterM )
 import Control.Monad.IO.Class      ( liftIO )
+import Data.List.Split             ( splitWhen )
+import Data.Maybe                  ( catMaybes )
 import Data.Text.Lazy              ( unpack )
-import Language.Javascript.JSaddle ( eval )
+import Language.Javascript.JSaddle ( eval
+                                   , JSM
+                                   , JSValueRef
+                                   )
+import Text.Read                   ( readMaybe )
 
 import Hasklight.AnimParams
 import Hasklight.Client.Rendering
 import Hasklight.Client.Utils
+import Hasklight.JSON
 
 
 addAnimAction :: JSEnv -> Document -> Int -> IO ()
@@ -75,23 +90,52 @@ setupColorJs runjs = do
                      ++     "}"
                      ++ "});"
 
-applyAnimAction :: Document -> HTMLButtonElement -> IO ()
-applyAnimAction doc okbtn = do
-        elementOnclick okbtn . liftIO $ do
-            manimdivs <- documentGetElementsByClassName doc "animdata"
-            case manimdivs of
-                Just animdivs -> do
-                    animdivs' <- toList animdivs
-                    putStrLn $ "We currently have "
-                                    ++ show (length animdivs')
-                                    ++ " animations"
-                    names <- ( (map castToHTMLHeadingElement)
+applyAnimAction :: Document -> JSEnv -> HTMLButtonElement -> IO ()
+applyAnimAction doc runjs okbtn = do
+    elementOnclick okbtn . liftIO $ do
+        manimdivs <- documentGetElementsByClassName doc "animdata"
+        case manimdivs of
+            Just animdivs -> do
+                animdivs' <- toList animdivs
+                names <- mapM (getChildrenByClass doc "name") animdivs'
+                         >>= ( (mapM htmlElementGetInnerText)
+                             . (map castToHTMLHeadingElement)
                              . (map (!! 0))
                              . (filter ((> 0) . length))
-                             ) `fmap` mapM (getChildrenByClass doc "name") animdivs'
-                                >>= (mapM (htmlElementGetInnerText :: IsHTMLElement h => h -> IO String))
-                    vals  <- mapM (getChildrenByClass doc "opt") animdivs'
-                    print names
-                    return ()
-                Nothing -> putStrLn "Error getting animdata"
-        return ()
+                             )
+                vals  <- mapM (getChildrenByClass doc "opt") animdivs'
+                           >>= mapM (mapM (processOpt . castToHTMLInputElement))
+                           >>= return . map catMaybes
+                modes <- mapM (getChildrenByClass doc "anim-bl") animdivs'
+                            >>= ( mapM htmlSelectElementGetValue
+                                . map castToHTMLSelectElement
+                                . map (!!0)
+                                . filter ((> 0) . length)
+                                )
+                let json = writeJSON (zipWith3 AnimMetadata names vals modes)
+                runjs $ eval $ "$.post(\"/newanims\", { \"newanims\" : "
+                                    ++ show json ++ "});"
+            Nothing -> putStrLn "Error getting animdata"
+    return ()
+
+processOpt :: HTMLInputElement -> IO (Maybe AnimParam)
+processOpt i = do attr <- elementGetAttribute i "opttype"
+                  val <- htmlInputElementGetValue i
+                  case attr of
+                      "double" -> case readMaybe val of
+                                      Just d -> return . Just $ AnimDouble d
+                                      Nothing -> return Nothing
+                      "int" -> case readMaybe val of
+                                   Just n -> return . Just $ AnimInt n
+                                   Nothing -> return Nothing
+                      "color" -> (return $ readColor val)
+                      a -> putStrLn ("Unrecognized attr: " ++ a) >> return Nothing
+
+readColor :: String -> Maybe AnimParam
+readColor [] = Nothing
+readColor str = let toks = Just . splitWhen (==',') . init $ drop 4 str
+                    f [sr,sg,sb] = Just (readMaybe sr,readMaybe sg,readMaybe sb)
+                    f _          = Nothing
+                    g (Just r,Just g,Just b) = Just $ AnimLED r g b
+                    g _                      = Nothing
+                in toks >>= f >>= g

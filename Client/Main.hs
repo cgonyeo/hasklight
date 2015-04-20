@@ -3,6 +3,7 @@ module Main where
 import GHCJS.DOM                   ( runWebGUI
                                    , webViewGetDomDocument
                                    , postGUIAsync
+                                   , postGUISync
                                    )
 import GHCJS.DOM.Document          ( documentGetBody
                                    , documentGetElementById
@@ -37,5 +38,5 @@ main = do
         htmlElementSetInnerHTML animtbl (unpack $ renderAnimList availAnims)
 
         mapM_ (addAnimAction runjs doc) [0..(length availAnims - 1)]
-        applyAnimAction doc okbtn
+        applyAnimAction doc runjs okbtn
       )
