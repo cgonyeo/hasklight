@@ -58,23 +58,19 @@ void *processAudio(void *arg) {
     snd_pcm_t *capture_handle = (snd_pcm_t *)arg;
     short buf[BUFSIZE / 2];
     int err;
-    while(1) {
-        if ((err = snd_pcm_readi (capture_handle, buf, BUFSIZE / 2)) != BUFSIZE / 2) {
-            fprintf (stderr, "read from audio interface failed (%s)\n", 
-            snd_strerror (err)); 
-        } 
-        pthread_mutex_lock(&storageLock);
-        for(int i = 0; i < BUFSIZE / 2; i++) {
-            storage[i] = storage[BUFSIZE / 2 + i];
-            storage[BUFSIZE / 2 + i] = (SAMPLE) buf[i] / 32768.0;
-        }
-        pthread_mutex_unlock(&storageLock);
+    if ((err = snd_pcm_readi (capture_handle, buf, BUFSIZE / 2)) != BUFSIZE / 2) {
+        fprintf (stderr, "read from audio interface failed (%s)\n", 
+        snd_strerror (err)); 
+    } 
+    pthread_mutex_lock(&storageLock);
+    for(int i = 0; i < BUFSIZE / 2; i++) {
+        storage[i] = storage[BUFSIZE / 2 + i];
+        storage[BUFSIZE / 2 + i] = (SAMPLE) buf[i] / 32768.0;
     }
-
-    snd_pcm_close (capture_handle);
+    pthread_mutex_unlock(&storageLock);
 }
 
-void audioInitialization() {
+void *audioInitialization() {
     for(int i = 0; i < BUFSIZE; i++)
         storage[i] = 0;
 
@@ -150,6 +146,5 @@ void audioInitialization() {
         exit (1); 
     } 
 
-    pthread_t al;
-    pthread_create(&al,NULL,processAudio,capture_handle);
+    return capture_handle;
 }

@@ -16,6 +16,28 @@ import Hasklight.LED
 import Hasklight.TLC5947
 import Hasklight.Site
 
+main :: IO ()
+main = do args <- getArgs
+          case args of
+              [file] -> do
+                  --load the config
+                  (snapconf,host,presetsdir) <- getConfig file
+                  --initialize hardware
+                  tlcInit
+                  --set up for audio
+                  rtCalls <- startAudio
+                  --make some mvars
+                  animmeta <- newMVar []
+                  mvfft <- newMVar []
+                  --run the FFT every time there's new audio
+                  modifyMVar (\x -> return (runFFT mvfft : x)) rtCalls
+                  --Start up the http server on a new thread
+                  _ <- forkIO $ httpServe snapconf $ site al animmeta host presetsdir
+                  --Drop into loop for hardware control
+                  al <- startAnimList
+                  runOdd al mvfft rtCalls 0 0
+              _ -> putStrLn "Usage: hasklight <config file>"
+
 getConfig :: FilePath -> IO (Config Snap a,String,FilePath)
 getConfig file = do cfg <- forceEither `fmap` readfile emptyCP file
                     let host       = forceEither $ get cfg "DEFAULT" "host"
@@ -31,8 +53,7 @@ getConfig file = do cfg <- forceEither `fmap` readfile emptyCP file
                     return (snapconf,show host,presetsdir)
 
 startAnimList :: IO (MVar (V.Vector (Animation,BlendingMode)))
-startAnimList = newMVar $
-           V.fromList []
+startAnimList = newMVar $ V.fromList []
 
 emptyDisplay :: Display
 emptyDisplay = V.replicate 64 (LED 0 0 0)
@@ -46,24 +67,11 @@ updateDisp disp = do tlcClearLeds
                                )
                      tlcUpdateLeds
 
-main :: IO ()
-main = do args <- getArgs
-          case args of
-              [file] -> do tlcInit
-                           audioInitialization
-                           al <- startAnimList
-                           animmeta <- newMVar []
-                           (snapconf,host,presetsdir) <- getConfig file
-                           _ <- forkIO $ httpServe snapconf $ site al animmeta host presetsdir
-                           --_ <- forkIO $ quickHttpServe $ site al animmeta host
-                           runOdd al 0 0
-              _ -> putStrLn "Usage: hasklight <config file>"
-
-runOdd :: MVar (V.Vector (Animation,BlendingMode)) -> TimeDiff -> Int -> IO ()
-runOdd animListM t' c = do
+runOdd :: MVar (V.Vector (Animation,BlendingMode)) -> MVar [Float] -> TimeDiff -> Int -> IO ()
+runOdd animListM mvfft t' c = do
         (TimeSpec s ns) <- getTime Monotonic
         sound' <- getSoundBuffer
-        fftvals <- runFFT
+        fftvals <- readMVar mvfft
         animList <- takeMVar animListM
         let t = (fromIntegral s) + ((fromIntegral ns) / 10^(9 :: Int))
             sound = drop (length sound' `div` 2) sound'
