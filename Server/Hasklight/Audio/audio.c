@@ -14,14 +14,22 @@
 #include <fftw3.h>
 
 //FFTW things
-fftw_complex *in, *out;
-fftw_plan plan;
+fftw_complex *inl, *outl, *inr, *outr;
+fftw_plan planl, planr;
 
 pthread_mutex_t storageLock = PTHREAD_MUTEX_INITIALIZER;
 
-SAMPLE storage[BUFSIZE];
-SAMPLE readbuf[BUFSIZE];
-SAMPLE fftbuf[BUFSIZE];
+SAMPLE *readbufs[2];
+SAMPLE readbufl[BUFSIZE];
+SAMPLE readbufr[BUFSIZE];
+
+SAMPLE *storages[2];
+SAMPLE storagel[BUFSIZE];
+SAMPLE storager[BUFSIZE];
+
+SAMPLE *fftbufs[2];
+SAMPLE fftbufl[BUFSIZE];
+SAMPLE fftbufr[BUFSIZE];
 
 double PI = 3.141592653;
 
@@ -29,64 +37,102 @@ float hann_window(int sample, int num_samples) {
         return 0.5 * (1 - cos((2 * PI * sample) / (num_samples - 1)));
 }
 
-SAMPLE *getSoundBuffer() {
+SAMPLE **getSoundBuffer() {
     pthread_mutex_lock(&storageLock);
     for(int i = 0; i < BUFSIZE; i++)
-        readbuf[i] = storage[i];
+    {
+        readbufl[i] = storagel[i];
+        readbufr[i] = storager[i];
+    }
     pthread_mutex_unlock(&storageLock);
-    return readbuf;
+    return readbufs;
 }
 
-SAMPLE *runFFT()
+SAMPLE **runFFT()
 {
     pthread_mutex_lock(&storageLock);
     for(int i = 0; i < BUFSIZE; i++)
-        in[i][0] = storage[i] * hann_window(i, BUFSIZE);
+    {
+        inl[i][0] = storagel[i] * hann_window(i, BUFSIZE);
+        inr[i][0] = storager[i] * hann_window(i, BUFSIZE);
+    }
     pthread_mutex_unlock(&storageLock);
-    fftw_execute(plan);
+    fftw_execute(planl);
+    fftw_execute(planr);
+    pthread_mutex_lock(&storageLock);
     for(int i = 0; i < BUFSIZE; i++)
     {
-        fftbuf[i] = sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]);
+        fftbufl[i] = sqrt(outl[i][0] * outl[i][0] + outl[i][1] * outl[i][1]);
+        fftbufr[i] = sqrt(outr[i][0] * outr[i][0] + outr[i][1] * outr[i][1]);
     }
-    return fftbuf;
+    pthread_mutex_unlock(&storageLock);
+    return fftbufs;
 }
 
 /**
  * Update loop for recording audio
  */
-void *processAudio(void *arg) {
+void processAudio(void *arg) {
     snd_pcm_t *capture_handle = (snd_pcm_t *)arg;
-    short buf[BUFSIZE / 2];
-    int err;
-    if ((err = snd_pcm_readi (capture_handle, buf, BUFSIZE / 2)) != BUFSIZE / 2) {
-        fprintf (stderr, "read from audio interface failed (%s)\n", 
-        snd_strerror (err)); 
-    } 
+    short bufl[BUFSIZE];
+    short bufr[BUFSIZE];
+    void *bufs[2] = { bufl, bufr };
+    int frames;
+    frames = snd_pcm_readi (capture_handle, bufs, BUFSIZE);
+    int tomove = BUFSIZE - frames;
     pthread_mutex_lock(&storageLock);
-    for(int i = 0; i < BUFSIZE / 2; i++) {
-        storage[i] = storage[BUFSIZE / 2 + i];
-        storage[BUFSIZE / 2 + i] = (SAMPLE) buf[i] / 32768.0;
+    if (frames < 0) {
+        fprintf (stderr, "read from audio interface failed (%s)\n", 
+            snd_strerror (frames)); 
+        pthread_mutex_unlock(&storageLock);
+        return;
+    } else if (frames < BUFSIZE) {
+        //fprintf (stderr, "Buffer underrun (Only read %d)\n", frames);
+        for(int i = 0; i < tomove; i++) {
+            storagel[i] = storagel[frames + i];
+            storager[i] = storager[frames + i];
+        }
+    }
+    for(int i = 0; i < frames; i++) {
+        storagel[tomove + i] = (SAMPLE) bufl[i] / 32768.0;
+        storager[tomove + i] = (SAMPLE) bufr[i] / 32768.0;
     }
     pthread_mutex_unlock(&storageLock);
 }
 
 void *audioInitialization() {
     for(int i = 0; i < BUFSIZE; i++)
-        storage[i] = 0;
-
-    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * BUFSIZE);
-    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * BUFSIZE);
-    for(int i = 0; i < BUFSIZE; i++)
     {
-        in[i][0] = 0;
-        in[i][1] = 0;
+        storager[i] = 0;
+        storagel[i] = 0;
     }
 
-    plan = fftw_plan_dft_1d(BUFSIZE, in, out, FFTW_FORWARD, FFTW_MEASURE);
+    readbufs[0] = readbufl;
+    readbufs[1] = readbufr;
+    storages[0] = storagel;
+    storages[1] = storager;
+    fftbufs[0] = fftbufl;
+    fftbufs[1] = fftbufr;
+
+    inr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * BUFSIZE);
+    outr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * BUFSIZE);
+    inl = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * BUFSIZE);
+    outl = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * BUFSIZE);
+
+    for(int i = 0; i < BUFSIZE; i++)
+    {
+        inr[i][0] = 0;
+        inr[i][1] = 0;
+        inl[i][0] = 0;
+        inl[i][1] = 0;
+    }
+
+    planl = fftw_plan_dft_1d(BUFSIZE, inr, outr, FFTW_FORWARD, FFTW_MEASURE);
+    planr = fftw_plan_dft_1d(BUFSIZE, inl, outl, FFTW_FORWARD, FFTW_MEASURE);
 
     int err;
     char *device = "hw:1,0";
-    unsigned int rate = 48000;
+    unsigned int rate = 44100;
     snd_pcm_t *capture_handle;
     snd_pcm_hw_params_t *hw_params;
 

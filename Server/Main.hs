@@ -15,6 +15,7 @@ import Hasklight.Audio
 import Hasklight.LED
 import Hasklight.TLC5947
 import Hasklight.Site
+import Hasklight.Animations
 
 main :: IO ()
 main = do args <- getArgs
@@ -28,14 +29,15 @@ main = do args <- getArgs
                   rtCalls <- startAudio
                   --make some mvars
                   animmeta <- newMVar []
-                  mvfft <- newMVar []
+                  mvfft <- newMVar ([],[])
                   --run the FFT every time there's new audio
-                  modifyMVar (\x -> return (runFFT mvfft : x)) rtCalls
+                  calls <- takeMVar rtCalls
+                  putMVar rtCalls (runFFT mvfft : calls)
                   --Start up the http server on a new thread
+                  al <- startAnimList
                   _ <- forkIO $ httpServe snapconf $ site al animmeta host presetsdir
                   --Drop into loop for hardware control
-                  al <- startAnimList
-                  runOdd al mvfft rtCalls 0 0
+                  runOdd al mvfft 0 0
               _ -> putStrLn "Usage: hasklight <config file>"
 
 getConfig :: FilePath -> IO (Config Snap a,String,FilePath)
@@ -53,7 +55,7 @@ getConfig file = do cfg <- forceEither `fmap` readfile emptyCP file
                     return (snapconf,show host,presetsdir)
 
 startAnimList :: IO (MVar (V.Vector (Animation,BlendingMode)))
-startAnimList = newMVar $ V.fromList []
+startAnimList = newMVar $ V.fromList [ (FFT $ spectrum (LED 100 0 0), add) ]
 
 emptyDisplay :: Display
 emptyDisplay = V.replicate 64 (LED 0 0 0)
@@ -67,21 +69,20 @@ updateDisp disp = do tlcClearLeds
                                )
                      tlcUpdateLeds
 
-runOdd :: MVar (V.Vector (Animation,BlendingMode)) -> MVar [Float] -> TimeDiff -> Int -> IO ()
+runOdd :: MVar (V.Vector (Animation,BlendingMode)) -> MVar ([Float],[Float]) -> TimeDiff -> Int -> IO ()
 runOdd animListM mvfft t' c = do
         (TimeSpec s ns) <- getTime Monotonic
-        sound' <- getSoundBuffer
-        fftvals <- readMVar mvfft
+        (soundl,soundr) <- getSoundBuffer
+        (fftvalsl,fftvalsr) <- readMVar mvfft
         animList <- takeMVar animListM
         let t = (fromIntegral s) + ((fromIntegral ns) / 10^(9 :: Int))
-            sound = drop (length sound' `div` 2) sound'
             (layers,animList') = V.unzip $ 
                 V.map (\x -> case x of
                                  (TimeOnly f,bl) -> let (dis,anim) = (f 64 t)
                                                     in (bl dis,(anim,bl))
-                                 (Audio f,bl) -> let (dis,anim) = (f 64 sound)
+                                 (Audio f,bl) -> let (dis,anim) = (f 64 soundl)
                                                     in (bl dis,(anim,bl))
-                                 (FFT f,bl) -> let (dis,anim) = (f 64 fftvals)
+                                 (FFT f,bl) -> let (dis,anim) = (f 64 fftvalsl)
                                                     in (bl dis,(anim,bl))
                       ) animList
             disp = V.foldr' (\x a -> x a) emptyDisplay layers
@@ -90,5 +91,5 @@ runOdd animListM mvfft t' c = do
         putMVar animListM animList'
         if t - t' >= 1
             then do putStrLn $ "Current framerate: " ++ show c
-                    runOdd animListM t 0
-            else runOdd animListM t' (c+1)
+                    runOdd animListM mvfft t 0
+            else runOdd animListM mvfft t' (c+1)

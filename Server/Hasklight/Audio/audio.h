@@ -2,11 +2,7 @@
 #define Audio
 
 //Audio related stuff
-#define BUFSIZE (2048)
+#define BUFSIZE (1024)
 typedef float SAMPLE;
-
-void audioInitialization();
-SAMPLE *getSoundBuffer();
-SAMPLE *runFFT();
 
 #endif
