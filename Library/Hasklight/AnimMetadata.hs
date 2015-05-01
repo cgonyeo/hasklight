@@ -10,7 +10,9 @@ data AnimMetadata = AnimMetadata { name         :: String
                                  , blendingmode :: String
                                  } deriving(Show, Data, Typeable)
 
-data AnimParam = AnimParam String AnimField deriving(Show, Data, Typeable)
+data AnimParam = AnimParam { param :: String
+                           , field :: AnimField
+                           } deriving(Show, Data, Typeable)
                
 data AnimField = AnimDouble Double
                | AnimInt Int

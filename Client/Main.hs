@@ -17,7 +17,7 @@ import Data.Text.Lazy              ( unpack
                                    )
 import Language.Javascript.JSaddle ( runJSaddle_ )
 
-import Hasklight.AnimParams
+import Hasklight.AnimMetadata
 import Hasklight.Client.Actions
 import Hasklight.Client.Rendering
 import Hasklight.Client.Utils

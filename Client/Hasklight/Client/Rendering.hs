@@ -5,20 +5,20 @@ import Text.Blaze.Html.Renderer.Text ( renderHtml )
 import Text.Hamlet                   ( shamlet )
 import Data.Text.Lazy                ( Text )
 
-import Hasklight.AnimParams
+import Hasklight.AnimMetadata
 
 
-renderAnimList :: [AvailAnim] -> Text
+renderAnimList :: [AnimMetadata] -> Text
 renderAnimList lst = renderHtml [shamlet|
-        $forall (i,AvailAnim n _) <- lst'
+        $forall (i,AnimMetadata n _ _) <- lst'
             <tr>
                 <td>
                     <a id="avail-#{i}" class="anim-selected" href="#" data-dismiss="modal" aria-label="Close">#{n}
         |]
-    where lst' = (zip [0..] lst) :: [(Int,AvailAnim)]
+    where lst' = (zip [0..] lst) :: [(Int,AnimMetadata)]
 
-renderAnim :: AvailAnim -> Text
-renderAnim (AvailAnim name opts) = renderHtml [shamlet|$newline always
+renderAnim :: AnimMetadata -> Text
+renderAnim (AnimMetadata name opts _) = renderHtml [shamlet|$newline always
         <div class="panel panel-default animdata">
             <div class="panel-body">
                 <div class="row">
@@ -36,23 +36,15 @@ renderAnim (AvailAnim name opts) = renderHtml [shamlet|$newline always
                         <button class="btn btn-default del-anim">
                             <span class="glyphicon glyphicon-remove">
                 <div class="row">
-                    $forall opt <- opts
+                    $forall (AnimParam n field) <- opts
                         <div class="col-md-4">
                             <div class="form-group form-inline">
-                                $case opt
-                                    $of DoubleOpt n l h
-                                        <label>#{n}
-                                        <input type="number" class="form-control opt" opttype="double" value=#{(l + h) / 2}>
-                                    $of IntOpt n l h
-                                        <label>#{n}
-                                        <input type="number" class="form-control opt" opttype="int" value=#{div (l + h) 2}>
-                                    $of ColorOpt n
-                                        <label>#{n}
-                                        <input type="text" class="form-control opt colopt" opttype="color" value="rgb(255, 0, 0)">
-                                    $of ColorList n
-                                        <label>#{n}
-                                    $of BoolOpt n
-                                        <label>#{n}
-                                    $of AnimOpt n
-                                        <label>#{n}
+                                <label class="field-name">#{n}
+                                $case field
+                                    $of AnimDouble d
+                                        <input type="number" class="form-control opt" opttype="double" value=#{d}>
+                                    $of AnimInt i
+                                        <input type="number" class="form-control opt" opttype="int" value=#{i}>
+                                    $of AnimLED r g b
+                                        <input type="text" class="form-control opt colopt" opttype="color" value="rgb(#{div r 16}, #{div g 16}, #{div b 16})">
     |]

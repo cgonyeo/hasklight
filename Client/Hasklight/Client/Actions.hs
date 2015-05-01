@@ -27,6 +27,7 @@ import GHCJS.DOM.Types             ( castToHTMLAnchorElement
                                    , castToHTMLDivElement
                                    , castToHTMLHeadingElement
                                    , castToHTMLInputElement
+                                   , castToHTMLLabelElement
                                    , castToHTMLSelectElement
                                    , Document
                                    , HTMLButtonElement
@@ -45,10 +46,10 @@ import Language.Javascript.JSaddle ( eval
                                    )
 import Text.Read                   ( readMaybe )
 
-import Hasklight.AnimParams
+import Hasklight.AnimMetadata
 import Hasklight.Client.Rendering
 import Hasklight.Client.Utils
-import Hasklight.JSON
+import Hasklight.Convert
 
 
 addAnimAction :: JSEnv -> Document -> Int -> IO ()
@@ -103,9 +104,12 @@ applyAnimAction doc runjs okbtn = do
                              . (map (!! 0))
                              . (filter ((> 0) . length))
                              )
-                vals  <- mapM (getChildrenByClass doc "opt") animdivs'
-                           >>= mapM (mapM (processOpt . castToHTMLInputElement))
-                           >>= return . map catMaybes
+                vals  <- do fieldtags   <- mapM (getChildrenByClass doc "opt") animdivs'
+                            fields <- mapM (mapM (processField . castToHTMLInputElement)) fieldtags
+                            nametags <- mapM (getChildrenByClass doc "field-name") animdivs'
+                            names <- mapM (mapM (htmlElementGetInnerText . castToHTMLLabelElement)) nametags
+                            let fields' = map catMaybes fields
+                            return $ zipWith (zipWith AnimParam) names fields'
                 modes <- mapM (getChildrenByClass doc "anim-bl") animdivs'
                             >>= ( mapM htmlSelectElementGetValue
                                 . map castToHTMLSelectElement
@@ -113,25 +117,26 @@ applyAnimAction doc runjs okbtn = do
                                 . filter ((> 0) . length)
                                 )
                 let json = writeJSON (zipWith3 AnimMetadata names vals modes)
-                runjs $ eval $ "$.post(\"/newanims\", { \"newanims\" : "
+                runjs $ eval $ "$.post(\"/set\", { \"newanims\" : "
                                     ++ show json ++ "});"
             Nothing -> putStrLn "Error getting animdata"
     return ()
 
-processOpt :: HTMLInputElement -> IO (Maybe AnimParam)
-processOpt i = do attr <- elementGetAttribute i "opttype"
-                  val <- htmlInputElementGetValue i
-                  case attr of
-                      "double" -> case readMaybe val of
-                                      Just d -> return . Just $ AnimDouble d
-                                      Nothing -> return Nothing
-                      "int" -> case readMaybe val of
-                                   Just n -> return . Just $ AnimInt n
-                                   Nothing -> return Nothing
-                      "color" -> (return $ readColor val)
-                      a -> putStrLn ("Unrecognized attr: " ++ a) >> return Nothing
+processField :: HTMLInputElement -> IO (Maybe AnimField)
+processField i = do
+        attr <- elementGetAttribute i "opttype"
+        val <- htmlInputElementGetValue i
+        case attr of
+            "double" -> case readMaybe val of
+                            Just d -> return . Just $ AnimDouble d
+                            Nothing -> return Nothing
+            "int" -> case readMaybe val of
+                         Just n -> return . Just $ AnimInt n
+                         Nothing -> return Nothing
+            "color" -> (return $ readColor val)
+            a -> putStrLn ("Unrecognized attr: " ++ a) >> return Nothing
 
-readColor :: String -> Maybe AnimParam
+readColor :: String -> Maybe AnimField
 readColor [] = Nothing
 readColor str = let toks = Just . splitWhen (==',') . init $ drop 4 str
                     f [sr,sg,sb] = Just (readMaybe sr,readMaybe sg,readMaybe sb)
