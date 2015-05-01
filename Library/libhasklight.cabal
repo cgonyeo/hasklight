@@ -17,7 +17,19 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Hasklight.Animations, Hasklight.LED, Hasklight.AnimParams, Hasklight.JSON, Hasklight.Animations.Wave, Hasklight.Animations.Volume, Hasklight.Animations.Strobe, Hasklight.Animations.Spectrum, Hasklight.Animations.SetAll, Hasklight.Animations.Ripple, Hasklight.Animations.Mirrors, Hasklight.Animations.CylonEye
+  exposed-modules:     Hasklight.Animations
+                     , Hasklight.Animations.Beat
+                     , Hasklight.Animations.CylonEye
+                     , Hasklight.Animations.Mirrors
+                     , Hasklight.Animations.Ripple
+                     , Hasklight.Animations.SetAll
+                     , Hasklight.Animations.Spectrum
+                     , Hasklight.Animations.Strobe
+                     , Hasklight.Animations.Wave
+                     , Hasklight.Animations.Volume
+                     , Hasklight.AnimMetadata
+                     , Hasklight.Convert
+                     , Hasklight.LED
   -- other-modules:       
   other-extensions:    DeriveDataTypeable
   build-depends:       base   >=4.7   && <4.8

@@ -7,13 +7,14 @@ cylonEye :: Double -- speed
          -> Double -- size
          -> Color
          -> DisplaySize
-         -> TimeDiff
+         -> AnimInfo
          -> (Display,Animation)
-cylonEye speed size c s t = (disp,TimeOnly $ cylonEye speed size c)
-    where center x = cosify $ abs ((decmComp x) * 2 - 1)
-          cosify x = (cos ( (x + 1) * pi)) / 2 + 0.5
-          disp = V.generate s (\x -> modC c $ animCos $ (
-                                                (fromIntegral x)
-                                              - (center $ t * speed)
-                                              * (fromIntegral s)
-                                           ) / size)
+cylonEye speed size c s i = 
+    let center x = cosify $ abs ((decmComp x) * 2 - 1)
+        cosify x = (cos ( (x + 1) * pi)) / 2 + 0.5
+        disp = V.generate s (\x -> modC c $ animCos $ (
+                                              (fromIntegral x)
+                                            - (center $ (time i) * speed)
+                                            * (fromIntegral s)
+                                         ) / size)
+    in (disp,Animation $ cylonEye speed size c)

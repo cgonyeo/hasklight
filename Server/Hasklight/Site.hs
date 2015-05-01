@@ -7,19 +7,17 @@ import Text.JSON
 import Text.JSON.Generic
 import Control.Monad.IO.Class
 import Snap.Core
-import Text.Blaze.Html.Renderer.Utf8
 import Snap.Util.FileServe
 import System.Directory
 import System.FilePath.Posix
 import Hasklight.LED
 
-import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Char8      as BS
 import qualified Data.Map.Lazy              as Map
 import qualified Data.Vector                as V
 
-import Hasklight.AnimParams
-import Hasklight.JSON
+import Hasklight.AnimMetadata
+import Hasklight.Convert
 
 site :: MVar (V.Vector (Animation,BlendingMode))
      -> MVar [AnimMetadata]

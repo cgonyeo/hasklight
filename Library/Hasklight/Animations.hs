@@ -2,6 +2,7 @@ module Hasklight.Animations
     ( module Hasklight.Animations
     ) where
 
+import Hasklight.Animations.Beat     as Hasklight.Animations
 import Hasklight.Animations.CylonEye as Hasklight.Animations
 import Hasklight.Animations.Mirrors  as Hasklight.Animations
 import Hasklight.Animations.Ripple   as Hasklight.Animations

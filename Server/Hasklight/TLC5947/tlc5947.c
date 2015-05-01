@@ -75,7 +75,7 @@ void tlc5947init(void)
     if(wiringPiSetupSys() == -1)
         printf("Wiring setup failed!\n");
 
-    spiFile = wiringPiSPISetup(0, 10000000);
+    spiFile = wiringPiSPISetup(0, 20000000);
     if(spiFile == -1)
         perror("Error initializing spi things\n");
     

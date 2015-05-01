@@ -6,10 +6,12 @@ import Hasklight.LED
 
 volume :: Color
        -> DisplaySize
-       -> [Float]
+       -> AnimInfo
        -> (Display,Animation)
-volume c size sound = (colors,Audio $ volume c)
-    where strength = foldr (\x a -> (abs x) + a) 0 sound
+volume c size i = (colors,Animation $ volume c)
+    where (lsound,rsound) = audio i
+          sound = zipWith max lsound rsound
+          strength = foldr (\x a -> (abs x) + a) 0 sound
                    / (fromIntegral $ length sound)
           scale = float2Double $ 1.3 * (log $ strength * 100) / 6.643856
           colors = V.generate size

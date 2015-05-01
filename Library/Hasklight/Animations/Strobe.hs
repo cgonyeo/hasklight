@@ -6,8 +6,8 @@ import Hasklight.LED
 strobe :: Double --Speed
        -> Color
        -> DisplaySize
-       -> TimeDiff
+       -> AnimInfo
        -> (Display,Animation)
-strobe speed c s t = if decmComp (t * speed) > 0.5
-                         then (V.replicate s c,TimeOnly $ strobe speed c)
-                         else (V.replicate s (LED 0 0 0),TimeOnly $ strobe speed c)
+strobe speed c s i = if decmComp ((time i) * speed) > 0.5
+                         then (V.replicate s c,Animation $ strobe speed c)
+                         else (V.replicate s (LED 0 0 0),Animation $ strobe speed c)

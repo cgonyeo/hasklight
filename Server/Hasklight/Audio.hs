@@ -6,39 +6,35 @@ import Foreign.C
 import Foreign.Ptr
 import Foreign.Storable
 
-foreign import ccall "audioInitialization" audioInitialization :: IO (Ptr CInt)
-foreign import ccall "getSoundBuffer" getSoundBuffer_c :: IO (Ptr (Ptr CFloat))
-foreign import ccall "runFFT" runFFT_c :: IO (Ptr (Ptr CFloat))
-foreign import ccall "processAudio" processAudio_c :: (Ptr CInt) -> IO ()
+import Hasklight.LED
 
-getSoundBuffer :: IO ([Float],[Float])
-getSoundBuffer = do
-        sptr <- getSoundBuffer_c
+foreign import ccall "audioInitialization" audioInitialization :: IO ()
+foreign import ccall "getSoundBuffer" getSoundBuffer :: IO (Ptr (Ptr CFloat))
+foreign import ccall "getFFTBuffer" getFFTBuffer :: IO (Ptr (Ptr CFloat))
+foreign import ccall "getOnBeat" getOnBeat_c :: IO CInt
+
+startAudio :: MVar Int -> IO ()
+startAudio m = audioInitialization >> putMVar m 1
+
+getSound :: IO ([Float],[Float])
+getSound = do
+        sptr <- getSoundBuffer
         lptr <- peek sptr
         rptr <- peek $ plusPtr sptr 4
         lvals <- mapM (\x -> peek $ plusPtr lptr (x * 4)) [0..1023]
         rvals <- mapM (\x -> peek $ plusPtr rptr (x * 4)) [0..1023]
         return (lvals,rvals)
 
-runFFT :: MVar ([Float],[Float]) -> IO ()
-runFFT mv = do
-        sptr <- runFFT_c
+getFFT :: IO ([Float],[Float])
+getFFT = do
+        sptr <- getFFTBuffer
         lptr <- peek sptr
         rptr <- peek $ plusPtr sptr 4
         lvals <- mapM (\x -> peek $ plusPtr lptr (x * 4)) [0..1023]
         rvals <- mapM (\x -> peek $ plusPtr rptr (x * 4)) [0..1023]
-        _ <- takeMVar mv
-        putMVar mv (lvals,rvals)
+        return (lvals,rvals)
 
-startAudio :: IO (MVar [IO ()])
-startAudio = do
-        mv <- newMVar []
-        captureHandle <- audioInitialization
-        _ <- forkIO $ audioLoop captureHandle mv
-        return mv
-
-audioLoop :: Ptr CInt -> MVar [IO ()] -> IO ()
-audioLoop captureHandle mv = do
-        processAudio_c captureHandle
-        readMVar mv >>= mapM_ (\x -> x)
-        audioLoop captureHandle mv
+getOnBeat :: IO Bool
+getOnBeat = do
+        onBeat <- getOnBeat_c
+        return (onBeat /= 0)

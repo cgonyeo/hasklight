@@ -5,6 +5,6 @@ import Hasklight.LED
 
 setAll :: Color
        -> DisplaySize
-       -> TimeDiff
+       -> AnimInfo
        -> (Display,Animation)
-setAll c s _ = (V.replicate s c,TimeOnly $ setAll c)
+setAll c s _ = (V.replicate s c,Animation $ setAll c)

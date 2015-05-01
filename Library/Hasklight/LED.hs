@@ -17,9 +17,13 @@ type TimeDiff = Double
 
 type BlendingMode = Display -> Display -> Display
 
-data Animation = TimeOnly (DisplaySize -> TimeDiff -> (Display,Animation))
-               | Audio    (DisplaySize -> [Float]  -> (Display,Animation))
-               | FFT      (DisplaySize -> [Float]  -> (Display,Animation))
+data AnimInfo = AnimInfo { time  :: TimeDiff
+                         , audio :: ([Float],[Float])
+                         , fft   :: ([Float],[Float])
+                         , beat  :: Bool
+                         }
+
+data Animation = Animation (DisplaySize -> AnimInfo -> (Display,Animation))
 
 ledBounds :: Int -> Int
 ledBounds = (max 0) . (min 4095)
